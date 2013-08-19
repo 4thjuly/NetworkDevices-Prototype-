@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html data-ng-app data-ng-csp>
+
+<head>
+    <meta charset="utf-8">
+    <script src="window.js"></script>
+    <script src="angular/angular.js"></script>
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet" media="all">
+    <link href="app.css" rel="stylesheet">
+    <title> </title>
+</head>
+
+<body data-ng-controller="ListController">
+
+    <section id="main">
+        
+      <nav>
+        <h2 id='appTitle'>List</h2>
+        <button id='refreshBtn' class="btn" data-ng-click="refresh()">REFRESH</button>
+      </nav>
+    
+      <ul>
+        <li data-ng-repeat="listItem in list">
+          <div id="friendName">{{listItem.friendlyName}}</div>
+          <div id="details">{{listItem.model}} ({{listItem.make}})</div>
+        </li>
+      </ul>
+        
+    </section>
+    
+</body>
+    
+</html>

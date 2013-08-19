@@ -1,0 +1,55 @@
+/* App wide css */
+
+* {
+    box-sizing:border-box;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    padding: 5px;
+    overflow: auto;
+}
+
+#main > nav {
+    margin-bottom: 10px;
+}
+
+#appTitle {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 15px;
+}
+
+#refreshBtn {
+    float: right;
+    margin-top: 5px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+ul {
+    margin: 0;
+    height: auto;
+}
+
+li {
+    border: 0px solid #E0E0E0;
+    border-radius: 1px;
+    padding: 5px;
+    margin-bottom: 1px;
+    background: #F0F0F0;
+    color: Black;
+}
+
+#friendName {
+    font-size: 12pt;
+}
+
+#details {
+    font-size: 9pt;
+    color: #505050
+}
