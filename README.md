@@ -1,3 +1,3 @@
-AngularListTest
+Network Devices
 ===============
-Test using Angular to show a list
+Prototype app to show devices on your local network
