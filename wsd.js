@@ -117,8 +117,7 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
 function getWsdDeviceXmlInfo(device, deviceFoundCallback) {
     var uuid = createNewUuid();
     var str = WSD_TRANSFER_GET.replace('00000000-0000-0000-0000-000000000000', uuid);
-    str = str.replace('uuid:11111111-1111-1111-1111-111111111111', wsDevice.endpointReference);
-    // TODO - Replace the To: with an end-point reference
+    str = str.replace('uuid:11111111-1111-1111-1111-111111111111', device.endpointReference);
     var xhr = new XMLHttpRequest();
     xhr.device = device;
     xhr.callback = deviceFoundCallback;
