@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM Content Loaded");  
 });
 
+var g_deviceList = [ ];
+
 function ListController($scope) {
-    $scope.deviceList = [ ];
+    $scope.deviceList = g_deviceList;
  
   $scope.refresh = function() {
       console.log("Refresh");
@@ -14,8 +16,8 @@ function ListController($scope) {
 }
 
 function onDeviceFound(foundDevice) {
-    for (var i = 0; i < $scope.deviceList.length; i++) {
-        var device = $scope.deviceList[i];
+    for (var i = 0; i < g_deviceList.length; i++) {
+        var device = g_deviceList[i];
         if (foundDevice.location == device.location) {
             // Already in the list, ignore it
             return;

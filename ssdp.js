@@ -63,7 +63,7 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 }                   
             };
             fr.readAsText(blob);
-            ssdpRecvLoop(socketId);
+            ssdpRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
             console.log("ssdprRecvFrom: Error: " + result.resultCode);
