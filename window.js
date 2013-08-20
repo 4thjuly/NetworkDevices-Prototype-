@@ -23,7 +23,7 @@ function ListController($scope) {
             }
             // Not in the list, add it
             deviceList.push(foundDevice);
-        }
+        });
     }  
  
 }
