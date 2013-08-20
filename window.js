@@ -9,7 +9,7 @@ function ListController($scope) {
     $scope.refresh = function() {
         console.log("Refresh");
         ssdpSearch(onDeviceFound);
-        wsdSeach(onDeviceFound);
+        wsdSearch(onDeviceFound);
     };
       
     function onDeviceFound(foundDevice) {
