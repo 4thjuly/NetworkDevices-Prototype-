@@ -138,10 +138,18 @@ function onWsdXMLReadyStateChange(e) {
             // console.log("wstgrsc: responseXML: " + xml);
             // TODO - get the friendly name, make, model etc from
             // NB BLOCKED on crbug/238819 : UDP being able to share the wsd port on windows (works on ChromeOS)
-            device.manufacturer = getXmlDataForTag(xml, "Manufacturer");
-            device.model = getXmlDataForTag(xml, "ModelName");
-            device.presentationUrl = getXmlDataForTag(xml, "PresentationUrl");
-            device.friendlyName = getXmlDataForTag(xml, "FriendlyName");
+            device.manufacturer = getXmlDataForTag(xml, 'Manufacturer');
+            device.model = getXmlDataForTag(xml, 'ModelName');
+            device.presentationUrl = getXmlDataForTag(xml, 'PresentationUrl');
+            device.friendlyName = getXmlDataForTag(xml, 'FriendlyName');
+          
+            // Special case: COMPUTER
+            var type = getXmlDataForTag(xml, 'Types');
+			if (type.toLowerCase() == 'pub:computer') {
+				device.friendlyName = getXmlDataForTag(xml, 'Computer');
+				device.model = '';
+				device.manufacturer = 'Computer';
+			}
             
             console.log('wstgrsc: ...');
             console.log(' loc: ' + device.location);     
