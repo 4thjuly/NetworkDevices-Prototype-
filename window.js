@@ -24,5 +24,5 @@ function onDeviceFound(foundDevice) {
         }
     }
     // Not in the list, add it
-    $scope.deviceList.push(foundDevice);
+    g_deviceList.push(foundDevice);
 }
