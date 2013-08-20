@@ -4,17 +4,33 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function ListController($scope) {
-    $scope.list = [
-        {friendlyName:'HOMESERVER: 1 : Windows Media Connect', make:'Microsoft', model:'Windows Media Connect'},
-        {friendlyName:'HOMESERVER', make:'Hewlett Packard', model:'Windows Home Server'},
-        {friendlyName:'Whole House', make:'Logitech', model:'Squeezebox Touch'},
-        {friendlyName:'Living Room Camera (192.168.1.164)', make:'TOSHIBA', model:'Wireless Network Camera'},
-        {friendlyName:'Logitech Media Server [Homeserver]', make:'Logitech', model:'Logitech Media Server 7.7.2 r33893'}
-    ];
+    $scope.deviceList = [ ];
  
   $scope.refresh = function() {
       console.log("Refresh");
-      $scope.list.push({friendlyName:'Friend Name', make:'Make', model:'Model'});
+      ssdpSearch(onDeviceFound);
   };
  
+}
+
+function device(location, ip, endpointReference, manufacturer, model, friendlyName, presentationUrl) {
+    this.location = location;
+    this.manufacturer = manufacturer;
+    this.model = model;
+    this.friendlyName = friendlyName;
+    this.ip = ip;
+    this.presentationUrl = presentationUrl;
+    this.endpointReference = endpointReference;
+}
+
+function onDeviceFound(foundDevice) {
+    for (var i = 0; i < $scope.deviceList.length; i++) {
+        var device = $scope.deviceList[i];
+        if (foundDevice.location == device.location) {
+            // Already in the list, ignore it
+            return;
+        }
+    }
+    // Not in the list, add it
+    $scope.deviceList.push(foundDevice);
 }
