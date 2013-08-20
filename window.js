@@ -13,16 +13,6 @@ function ListController($scope) {
  
 }
 
-function device(location, ip, endpointReference, manufacturer, model, friendlyName, presentationUrl) {
-    this.location = location;
-    this.manufacturer = manufacturer;
-    this.model = model;
-    this.friendlyName = friendlyName;
-    this.ip = ip;
-    this.presentationUrl = presentationUrl;
-    this.endpointReference = endpointReference;
-}
-
 function onDeviceFound(foundDevice) {
     for (var i = 0; i < $scope.deviceList.length; i++) {
         var device = $scope.deviceList[i];

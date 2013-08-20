@@ -58,7 +58,7 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 //console.log('ssdprl.st:' + info["ST"]);
                 // Keep track of devices by location
                 if (location) {
-                    var device = new device(location, result.address);
+                    var device = new Device(location, result.address);
                     getSsdpDeviceXmlInfo(device, deviceFoundCallback);
                 }                   
             };
