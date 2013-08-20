@@ -43,7 +43,7 @@ function ssdpSearch(deviceFoundCallback) {
 }
 
 function ssdpRecvLoop(socketId, deviceFoundCallback) {
-    //console.log("ssdpRecvLoop:...");
+    console.log("ssdpRecvLoop:...");
     chrome.socket.recvFrom(socketId, 4096, function (result) {
         if (result.resultCode >= 0) {
             //console.log("ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
@@ -54,8 +54,8 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 // var st = getServiceType(e.target.result);
                 var info = getSsdpDeviceNotifyInfo(e.target.result);
                 var location = info["LOCATION"];
-                //console.log('ssdprl.loc:' + location);
-                //console.log('ssdprl.st:' + info["ST"]);
+                console.log('   loc:' + location);
+                console.log('   st:' + info["ST"]);
                 // Keep track of devices by location
                 if (location) {
                     var device = new Device(location, result.address);
@@ -94,6 +94,7 @@ function getSsdpDeviceXmlInfo(device, deviceFoundCallback) {
 }
 
 function onDeviceXMLReadyStateChange(e) {
+    // NB Somedevices will refuse to respond
     if (this.readyState == 4) {
         if (this.status == 200 && this.responseXML) {
             var xml = this.responseXML;
