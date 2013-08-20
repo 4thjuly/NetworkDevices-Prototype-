@@ -43,7 +43,7 @@ function ssdpSearch(deviceFoundCallback) {
 }
 
 function ssdpRecvLoop(socketId, deviceFoundCallback) {
-    console.log("ssdpRecvLoop:...");
+//    console.log("ssdpRecvLoop:...");
     chrome.socket.recvFrom(socketId, 4096, function (result) {
         if (result.resultCode >= 0) {
             //console.log("ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
@@ -54,8 +54,8 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 // var st = getServiceType(e.target.result);
                 var info = getSsdpDeviceNotifyInfo(e.target.result);
                 var location = info["LOCATION"];
-                console.log('   loc:' + location);
-                console.log('   st:' + info["ST"]);
+//                console.log('   loc:' + location);
+//                console.log('   st:' + info["ST"]);
                 // Keep track of devices by location
                 if (location) {
                     var device = new Device(location, result.address);
@@ -94,7 +94,7 @@ function getSsdpDeviceXmlInfo(device, deviceFoundCallback) {
 }
 
 function onDeviceXMLReadyStateChange(e) {
-    // NB Somedevices will refuse to respond
+    // NB Some devices will refuse to respond
     if (this.readyState == 4) {
         if (this.status == 200 && this.responseXML) {
             var xml = this.responseXML;
@@ -104,10 +104,10 @@ function onDeviceXMLReadyStateChange(e) {
             device.model = getXmlDataForTag(xml, "modelName");
             device.presentationUrl = getXmlDataForTag(xml, "presentationURL");
             
-            console.log('dxmlrsc: ...');
-            console.log(' loc: ' + device.location);     
-            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
-            console.log(' purl: ' + device.presentationUrl);   
+//            console.log('dxmlrsc: ...');
+//            console.log(' loc: ' + device.location);     
+//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+//            console.log(' purl: ' + device.presentationUrl);   
             
             this.callback(device);
         }
