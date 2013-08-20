@@ -89,11 +89,11 @@ function getSsdpDeviceXmlInfo(device, deviceFoundCallback) {
     xhr.device = device;
     xhr.callback = deviceFoundCallback;
     xhr.open("GET", device.location, true);
-    xhr.onreadystatechange = onDeviceXMLReadyStateChange;
+    xhr.onreadystatechange = onSsdpXMLReadyStateChange;
     xhr.send();
 }
 
-function onDeviceXMLReadyStateChange(e) {
+function onSsdpXMLReadyStateChange(e) {
     // NB Some devices will refuse to respond
     if (this.readyState == 4) {
         if (this.status == 200 && this.responseXML) {
