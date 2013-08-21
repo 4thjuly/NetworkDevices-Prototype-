@@ -45,7 +45,7 @@ function ssdpSearch(deviceFoundCallback) {
 				console.log('ssdpSearch('+repeat+'):...');
 				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function() { });
 				if (--repeat <= 0) clearInterval(timer);
-			}, 50 + math.random() * 450);
+			}, 50 + (Math.random() * 450));
         });
     });
 }
