@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Do something
     console.log("DOM Content Loaded");  
 });
 
@@ -27,5 +26,7 @@ function ListController($scope) {
             deviceList.push(foundDevice);
         });
     }  
+	
+	$scope.refresh();
  
 }
