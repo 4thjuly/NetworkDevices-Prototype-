@@ -24,7 +24,7 @@
     
       <ul>
         <li data-ng-repeat="device in deviceList">
-			<div data-ng-switch="{{device.presentationUrl}}">
+			<div data-ng-switch="device.presentationUrl">
 			  <a id="friendlyName" data-ng-switch-when="bar" href="{{device.presentationUrl}}">{{device.friendlyName}}</a>
 			  <div id="friendlyName" data-ng-switch-when="foo">{{device.friendlyName}}</div>
 			</div>

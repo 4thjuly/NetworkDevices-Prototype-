@@ -43,7 +43,7 @@ function ssdpSearch(deviceFoundCallback) {
 			var repeat = 2;			
 			var timer = setInterval(function() {
 				console.log('ssdpSearch('+repeat+'):...');
-				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900);
+				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function() { });
 				if (--repeat <= 0) clearInterval(timer);
 			}, 1000);
         });
