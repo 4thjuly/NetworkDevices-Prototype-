@@ -39,7 +39,7 @@ function ssdpSearch(deviceFoundCallback) {
 				console.log("ssdpSearch wrote:" + result.bytesWritten);
 				ssdpRecvLoop(socketId, deviceFoundCallback);
 			});
-			// UDP is unreliable, spec recommends repeating the multicast a few times
+			// UDP is unreliable so repeat the multicast a few times
 			var repeat = 2;			
 			var timer = setInterval(function() {
 				console.log('ssdpSearch('+repeat+'):...');
@@ -112,10 +112,10 @@ function onSsdpXMLReadyStateChange(e) {
             device.model = getXmlDataForTag(xml, "modelName");
             device.presentationUrl = getXmlDataForTag(xml, "presentationURL") || "";
             
-            console.log('dxmlrsc: ...');
-            console.log(' loc: ' + device.location);     
-            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
-            console.log(' purl: ' + device.presentationUrl);   
+//            console.log('dxmlrsc: ...');
+//            console.log(' loc: ' + device.location);     
+//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+//            console.log(' purl: ' + device.presentationUrl);   
             
             this.callback(device);
         }
