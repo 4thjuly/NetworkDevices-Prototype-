@@ -45,6 +45,14 @@ li {
     color: Black;
 }
 
+a {
+	color: black;	
+}
+
+a:hover {
+	color: black;
+}
+
 #friendName {
     font-size: 12pt;
 }
