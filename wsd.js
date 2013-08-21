@@ -76,11 +76,11 @@ function wsdSearch(deviceFoundCallback) {
                 wsdRecvLoop(socketId, deviceFoundCallback);
             });
 			// UDP is unreliable so repeat the multicast a few times
-			var repeat = 2;			
+			var repeat = 3;			
 			var timer = setInterval(function() {
 				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function() { });
 				if (--repeat <= 0) clearInterval(timer);
-			}, 1000);
+			}, 50 + math.random() * 450);
         });
     });
 }
