@@ -1,3 +1,8 @@
+// TODO
+// - Sort list alphabetically
+// - Listen for multicasts not just unicasts
+// - UI cleanup 'refresh' button (disable for a second or two
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM Content Loaded");  
 });
