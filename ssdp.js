@@ -62,8 +62,8 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 // var st = getServiceType(e.target.result);
                 var info = getSsdpDeviceNotifyInfo(e.target.result);
                 var location = info["LOCATION"];
-                console.log('   loc:' + location);
-                console.log('   st:' + info["ST"]);
+//                console.log('   loc:' + location);
+//                console.log('   st:' + info["ST"]);
                 // Keep track of devices by location
                 if (location) {
                     var device = new Device(location, result.address);
@@ -112,10 +112,10 @@ function onSsdpXMLReadyStateChange(e) {
             device.model = getXmlDataForTag(xml, "modelName");
             device.presentationUrl = getXmlDataForTag(xml, "presentationURL");
             
-//            console.log('dxmlrsc: ...');
-//            console.log(' loc: ' + device.location);     
-//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
-//            console.log(' purl: ' + device.presentationUrl);   
+            console.log('dxmlrsc: ...');
+            console.log(' loc: ' + device.location);     
+            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+            console.log(' purl: ' + device.presentationUrl);   
             
             this.callback(device);
         }
