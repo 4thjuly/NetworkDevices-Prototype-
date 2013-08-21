@@ -34,10 +34,17 @@ function ssdpSearch(deviceFoundCallback) {
         g_ssdpSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-            chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result){
-                console.log("ssdpSearch wrote:" + result.bytesWritten);
-                ssdpRecvLoop(socketId, deviceFoundCallback);
-            });
+			// UDP is unreliable, spec recommends repeating the multicast a few times
+			var repeat = 3;			
+			var timer = setInterval(function() {
+				console.log('ssdpSearch('+repeat+'):...');
+				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result) {
+					console.log("ssdpSearch wrote:" + result.bytesWritten);
+					ssdpRecvLoop(socketId, deviceFoundCallback);
+				});
+				if (--repeat <= 0) clearInterval(timer);
+			}, 1000);
+									
         });
     });
 }

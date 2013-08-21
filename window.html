@@ -24,7 +24,7 @@
     
       <ul>
         <li data-ng-repeat="device in deviceList">
-          <div id="friendlyName">{{device.friendlyName}}</div>
+          <a id="friendlyName" href="{{device:presentationUrl}}">{{device.friendlyName}}</div>
           <div id="details">{{device.model}} ({{device.manufacturer}})</div>
         </li>
       </ul>
