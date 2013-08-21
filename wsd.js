@@ -47,15 +47,16 @@ var WSD_TRANSFER_GET = SOAP_HEADER + WSD_TRANSFER_GET_MSG;
 
 // ---------------------------------------------------------------------------
 var g_wsdSearchSocket;
+var g_lastWsdLocation;
 
 // Search for Web Services devices by multicasting an discovery Probe 
 // Each device should respond with a ProbeMatches that contains an XAddrs URL
 // Send a Transfer-Get to the XAddrs should provide the various XML properties
 // Call the callback for each device that responds properly
 function wsdSearch(deviceFoundCallback) {
-    // trigger an ws-discover probe
     var uuid = createNewUuid();
-    var str = WSD_PROBE.replace('00000000-0000-0000-0000-000000000000', uuid);
+	g_lastWsdLocation = null;
+	var str = WSD_PROBE.replace('00000000-0000-0000-0000-000000000000', uuid);
     var buf = new ArrayBuffer(str.length);
     var bufView = new Uint8Array(buf);
     for (var i=0, strLen=str.length; i<strLen; i++) {
@@ -102,14 +103,16 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
                 // Location should be in XAddrs
                 // TODO Some devices may only have an EndPointReference and need a resolve to get the XAddr
                 var location = getXmlDataForTag(xml, "XAddrs");
-                // HACK - Just grab the first address if there are multiple
-                if (location) {
-                    location = location.split(' ')[0];
-                    console.log("wsdrcl: " + location);
-                    var endpointReference = getXmlDataForTag(xml, "Address");
-                    var device = new Device(location, result.address, endpointReference);
-                    getWsdDeviceXmlInfo(device, deviceFoundCallback);
-                }
+				// Got a location, get the xml properties (unless it's a dup)
+				if (location && location != g_lastWsdLocation) {
+					g_lastWsdLocation = location;
+					// HACK - Just grab the first address if there are multiple
+					location = location.split(' ')[0];
+					console.log("wsdrcl: " + location);
+					var endpointReference = getXmlDataForTag(xml, "Address");
+					var device = new Device(location, result.address, endpointReference);
+					getWsdDeviceXmlInfo(device, deviceFoundCallback);
+				}
             };
             fr.readAsText(blob);
             wsdRecvLoop(socketId, deviceFoundCallback);
