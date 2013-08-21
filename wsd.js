@@ -149,7 +149,7 @@ function onWsdXMLReadyStateChange(e) {
 				device.friendlyName = getXmlDataForTag(xml, 'Computer');
 				device.model = '';
 				device.manufacturer = 'Computer';
-				device.presentationUrl = '';
+				device.presentationUrl = 'foo';
 			}
             
             console.log('wstgrsc: ...');
