@@ -24,9 +24,11 @@
     
       <ul>
         <li data-ng-repeat="device in deviceList">
-<!--          <a id="friendlyName" href="{{device.presentationUrl}}">{{device.friendlyName}}</a>-->
-          <a id="friendlyName">{{device.friendlyName}}</a>
-          <div id="details">{{device.model}} ({{device.manufacturer}})</div>
+			<div data-ng-switch="{{device.presentationUrl}}">
+			  <a id="friendlyName" data-ng-switch-default href="{{device.presentationUrl}}">{{device.friendlyName}}</a>
+			  <div id="friendlyName" data-ng-switch-when="">{{device.friendlyName}}</div>
+			</div>
+            <div id="details">{{device.model}} ({{device.manufacturer}})</div>
         </li>
       </ul>
         
