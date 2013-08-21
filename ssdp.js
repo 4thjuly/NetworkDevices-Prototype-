@@ -110,7 +110,7 @@ function onSsdpXMLReadyStateChange(e) {
             device.friendlyName = getXmlDataForTag(xml, "friendlyName");
             device.manufacturer = getXmlDataForTag(xml, "manufacturer");
             device.model = getXmlDataForTag(xml, "modelName");
-            device.presentationUrl = getXmlDataForTag(xml, "presentationURL");
+            device.presentationUrl = getXmlDataForTag(xml, "presentationURL") || "";
             
             console.log('dxmlrsc: ...');
             console.log(' loc: ' + device.location);     
