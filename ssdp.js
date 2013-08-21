@@ -11,7 +11,7 @@ var SSDP_DISCOVER = [
     ].join('\r\n');
 
 var g_ssdpSearchSocket;
-var g_lastSsdpLocation;
+var g_ssdpLocations = { };
 
 // Search for SSDP devices by multicasting an M-SEARCH. 
 // Each device should respond with a NOTIFY that contains a 'LOCATION' URL
@@ -19,7 +19,7 @@ var g_lastSsdpLocation;
 // Call the callback for each device that responds properly
 function ssdpSearch(deviceFoundCallback) {
     var str = SSDP_DISCOVER;
-	g_lastSsdpLocation = null; 
+	g_ssdpLocations = { }; 
     var buf = new ArrayBuffer(str.length);
     var bufView = new Uint8Array(buf);	
     for (var i=0, strLen=str.length; i<strLen; i++) {
@@ -68,8 +68,8 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
 //                console.log('   st:' + info["ST"]);
 				
                 // Got a location, get the xml properties (unless it's a dup)
-                if (location && location != g_lastSsdpLocation) {
-					g_lastSsdpLocation = location; 
+                if (location && !g_ssdpLocations[location]) {
+					g_ssdpLocations[location] = true; 
                     var device = new Device(location, result.address);
                     getSsdpDeviceXmlInfo(device, deviceFoundCallback);
                 }                   

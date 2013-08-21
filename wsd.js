@@ -47,7 +47,7 @@ var WSD_TRANSFER_GET = SOAP_HEADER + WSD_TRANSFER_GET_MSG;
 
 // ---------------------------------------------------------------------------
 var g_wsdSearchSocket;
-var g_lastWsdLocation;
+var g_wsdLocations = { };
 
 // Search for Web Services devices by multicasting an discovery Probe 
 // Each device should respond with a ProbeMatches that contains an XAddrs URL
@@ -55,7 +55,7 @@ var g_lastWsdLocation;
 // Call the callback for each device that responds properly
 function wsdSearch(deviceFoundCallback) {
     var uuid = createNewUuid();
-	g_lastWsdLocation = null;
+	g_wsdLocations = { };
 	var str = WSD_PROBE.replace('00000000-0000-0000-0000-000000000000', uuid);
     var buf = new ArrayBuffer(str.length);
     var bufView = new Uint8Array(buf);
@@ -104,8 +104,8 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
                 // TODO Some devices may only have an EndPointReference and need a resolve to get the XAddr
                 var location = getXmlDataForTag(xml, "XAddrs");
 				// Got a location, get the xml properties (unless it's a dup)
-				if (location && location != g_lastWsdLocation) {
-					g_lastWsdLocation = location;
+				if (location && !g_wsdLocations[location]) {
+					g_wsdLocations[location] = true;
 					// HACK - Just grab the first address if there are multiple
 					location = location.split(' ')[0];
 					console.log("wsdrcl: " + location);
