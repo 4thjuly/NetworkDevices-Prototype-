@@ -79,6 +79,7 @@ function wsdSearch(deviceFoundCallback) {
 			// UDP is unreliable so repeat the multicast a few times
 			var repeat = 3;			
 			var timer = setInterval(function() {
+				console.log('wsdSearch('+repeat+'):...');
 				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function() { });
 				if (--repeat <= 0) clearInterval(timer);
 			}, 50 + (Math.random() * 450));
