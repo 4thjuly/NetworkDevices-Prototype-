@@ -11,6 +11,7 @@ var SSDP_DISCOVER = [
     ].join('\r\n');
 
 var g_ssdpSearchSocket;
+var g_ssdpMulticastSocket;
 var g_ssdpLocations = { };
 
 // Search for SSDP devices by multicasting an M-SEARCH. 
@@ -35,6 +36,7 @@ function ssdpSearch(deviceFoundCallback) {
         g_ssdpSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
+			handleSsdpMulticastMessages(deviceFoundCallback);
 			// Send DISCOVER and recv results back
 			chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result) {
 				console.log("ssdpSearch wrote:" + result.bytesWritten);
@@ -48,6 +50,17 @@ function ssdpSearch(deviceFoundCallback) {
 				if (--repeat <= 0) clearInterval(timer);
 			}, 50 + (Math.random() * 450));
         });
+    });
+}
+
+function handleSsdpMulticastMessages(deviceFoundCallback) {
+    if (g_ssdpMulticastSocket) {
+        chrome.socket.destroy(g_ssdpMulticastSocket.socketId);
+        g_ssdpMulticastSocket = null;
+    }
+    createMulticastSocket("239.255.255.250", 1900, 4, function(socket) {
+        g_ssdpMulticastSocket = socket;
+        ssdpRecvLoop(socket.socketId, deviceFoundCallback);
     });
 }
 
@@ -125,3 +138,4 @@ function onSsdpXMLReadyStateChange(e) {
         }
     }    
 }
+

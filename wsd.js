@@ -47,6 +47,7 @@ var WSD_TRANSFER_GET = SOAP_HEADER + WSD_TRANSFER_GET_MSG;
 
 // ---------------------------------------------------------------------------
 var g_wsdSearchSocket;
+var g_wsdMulticastSocket
 var g_wsdLocations = { };
 
 // Search for Web Services devices by multicasting an discovery Probe 
@@ -72,8 +73,9 @@ function wsdSearch(deviceFoundCallback) {
         g_wsdSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
+			handleWsdMulticastMessages(deviceFoundCallback);
             chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result){
-                console.log("wsdSearch wrote:" + result);
+                console.log("wsdSearch wrote:" + + result.bytesWritten);				
                 wsdRecvLoop(socketId, deviceFoundCallback);
             });
 			// UDP is unreliable so repeat the multicast a few times
@@ -84,6 +86,17 @@ function wsdSearch(deviceFoundCallback) {
 				if (--repeat <= 0) clearInterval(timer);
 			}, 50 + (Math.random() * 450));
         });
+    });
+}
+
+function handleWsdMulticastMessages(deviceFoundCallback) {
+    if (g_wsdMulticastSocket) {
+        chrome.socket.destroy(g_wsdMulticastSocket.socketId);
+        g_wsdMulticastSocket = null;
+    }
+    createMulticastSocket("239.255.255.250", 3702, 1, function(socket) {
+        g_wsdMulticastSocket = socket;
+        wsdRecvLoop(socket.socketId, deviceFoundCallback);
     });
 }
 

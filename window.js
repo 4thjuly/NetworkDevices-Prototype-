@@ -35,3 +35,24 @@ function ListController($scope) {
 	$scope.refresh();
  
 }
+
+
+//function initUDP() {
+//    if (g_ssdpSocket) {
+//        chrome.socket.destroy(g_ssdpSocket.socketId);
+//        g_ssdpSocket = null;
+//    }
+//    createMulticastSocket("239.255.255.250", 1900, function(socket) {
+//        g_ssdpSocket = socket;
+//        ssdpRecvLoop(g_ssdpSocket.socketId);
+//    });
+//    if (g_wsdSocket) {
+//        chrome.socket.destroy(g_wsdSocket.socketId);
+//        g_wsdSocket = null;
+//    }
+//    createMulticastSocket("239.255.255.250", 3702, function(socket) {
+//        g_wsdSocket = socket;
+//        wsdRecvLoop(g_wsdSocket.socketId);
+//    });
+//}
+
