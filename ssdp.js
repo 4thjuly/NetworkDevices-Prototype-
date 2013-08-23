@@ -66,10 +66,10 @@ function handleSsdpMulticastMessages(deviceFoundCallback) {
 }
 
 function ssdpRecvLoop(socketId, deviceFoundCallback) {
-//    console.log("ssdpRecvLoop:...");
+    console.log("ssdprl("+socketId+"):...");
     chrome.socket.recvFrom(socketId, 4096, function (result) {
         if (result.resultCode >= 0) {
-            console.log("ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
+            console.log("...ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
             var dv = new DataView(result.data);
             var blob = new Blob([dv]);
             var fr = new FileReader();
