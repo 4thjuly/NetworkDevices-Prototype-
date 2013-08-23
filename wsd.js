@@ -73,7 +73,7 @@ function wsdSearch(deviceFoundCallback) {
         g_wsdSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-			handleWsdMulticastMessages(deviceFoundCallback);
+			handleWsdHelloMessages(deviceFoundCallback);
             chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result){
                 console.log("wsdSearch wrote:" + + result.bytesWritten);				
                 wsdRecvLoop(socketId, deviceFoundCallback);
@@ -89,7 +89,8 @@ function wsdSearch(deviceFoundCallback) {
     });
 }
 
-function handleWsdMulticastMessages(deviceFoundCallback) {
+// Hello messages are unsolicated multicasts
+function handleWsdHelloMessages(deviceFoundCallback) {
     if (g_wsdMulticastSocket) {
         chrome.socket.destroy(g_wsdMulticastSocket.socketId);
         g_wsdMulticastSocket = null;

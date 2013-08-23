@@ -37,7 +37,7 @@ function ssdpSearch(deviceFoundCallback) {
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
 			handleSsdpMulticastMessages(deviceFoundCallback);
-			// Send DISCOVER and recv results back
+			// Send DISCOVER and recv (unicast) results back
 			chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result) {
 				console.log("ssdpSearch wrote:" + result.bytesWritten);
 				ssdpRecvLoop(socketId, deviceFoundCallback);
@@ -53,6 +53,7 @@ function ssdpSearch(deviceFoundCallback) {
     });
 }
 
+// NOTIFY messages can sometimes be multicast
 function handleSsdpMulticastMessages(deviceFoundCallback) {
     if (g_ssdpMulticastSocket) {
         chrome.socket.destroy(g_ssdpMulticastSocket.socketId);
