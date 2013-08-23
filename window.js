@@ -1,7 +1,3 @@
-// TODO
-// - Sort list alphabetically
-// - Listen for multicasts not just unicasts
-// - UI cleanup 'refresh' button (disable for a second or two
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM Content Loaded");  
@@ -12,6 +8,7 @@ function ListController($scope) {
  
     $scope.refresh = function() {
         console.log("Refresh");
+		// TODO - Disable refresh button for a second to make it obvious something is happening
         $scope.deviceList = [ ];
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
@@ -42,23 +39,4 @@ function ListController($scope) {
  
 }
 
-
-//function initUDP() {
-//    if (g_ssdpSocket) {
-//        chrome.socket.destroy(g_ssdpSocket.socketId);
-//        g_ssdpSocket = null;
-//    }
-//    createMulticastSocket("239.255.255.250", 1900, function(socket) {
-//        g_ssdpSocket = socket;
-//        ssdpRecvLoop(g_ssdpSocket.socketId);
-//    });
-//    if (g_wsdSocket) {
-//        chrome.socket.destroy(g_wsdSocket.socketId);
-//        g_wsdSocket = null;
-//    }
-//    createMulticastSocket("239.255.255.250", 3702, function(socket) {
-//        g_wsdSocket = socket;
-//        wsdRecvLoop(g_wsdSocket.socketId);
-//    });
-//}
 
