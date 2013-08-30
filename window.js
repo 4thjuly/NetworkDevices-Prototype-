@@ -8,7 +8,11 @@ function ListController($scope) {
  
     $scope.refresh = function() {
         console.log("Refresh");
-		// TODO - Disable refresh button for a second to make it obvious something is happening
+		// Disable refresh button for a second to make it obvious something is happening
+		var refreshBtn = Document.getElementById('refreshBtn');
+		refreshBtn.disabled = true;
+		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
+		// Clear the old list, look for new stuff
         $scope.deviceList = [ ];
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
