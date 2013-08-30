@@ -47,7 +47,7 @@ var WSD_TRANSFER_GET = SOAP_HEADER + WSD_TRANSFER_GET_MSG;
 
 // ---------------------------------------------------------------------------
 var g_wsdSearchSocket;
-var g_wsdMulticastSocket
+var g_wsdMulticastSocket;
 var g_wsdLocations = { };
 
 // Search for Web Services devices by multicasting an discovery Probe 
@@ -73,7 +73,7 @@ function wsdSearch(deviceFoundCallback) {
         g_wsdSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-			//handleWsdHelloMessages(deviceFoundCallback);
+			handleWsdHelloMessages(deviceFoundCallback);
             chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result){
                 console.log("wsdSearch wrote:" + + result.bytesWritten);				
                 wsdRecvLoop(socketId, deviceFoundCallback);
