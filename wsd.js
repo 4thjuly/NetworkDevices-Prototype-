@@ -73,7 +73,7 @@ function wsdSearch(deviceFoundCallback) {
         g_wsdSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-			handleWsdHelloMessages(deviceFoundCallback);
+			//handleWsdHelloMessages(deviceFoundCallback);
             chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result){
                 console.log("wsdSearch wrote:" + + result.bytesWritten);				
                 wsdRecvLoop(socketId, deviceFoundCallback);
@@ -95,7 +95,7 @@ function handleWsdHelloMessages(deviceFoundCallback) {
         chrome.socket.destroy(g_wsdMulticastSocket.socketId);
         g_wsdMulticastSocket = null;
     }
-    createMulticastSocket("239.255.255.250", 3702, 10, function(socket) {
+    createMulticastSocket("239.255.255.250", 3702, 1, function(socket) {
         g_wsdMulticastSocket = socket;
         wsdRecvLoop(socket.socketId, deviceFoundCallback);
     });
