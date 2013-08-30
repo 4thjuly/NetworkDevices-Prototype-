@@ -9,7 +9,7 @@ function ListController($scope) {
     $scope.refresh = function() {
         console.log("Refresh");
 		// Disable refresh button for a second to make it obvious something is happening
-		var refreshBtn = Document.getElementById('refreshBtn');
+		var refreshBtn = document.getElementById('refreshBtn');
 		refreshBtn.disabled = true;
 		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
 		// Clear the old list, look for new stuff
