@@ -95,7 +95,7 @@ function handleWsdHelloMessages(deviceFoundCallback) {
         chrome.socket.destroy(g_wsdMulticastSocket.socketId);
         g_wsdMulticastSocket = null;
     }
-    createMulticastSocket("239.255.255.250", 3702, 1, function(socket) {
+    createMulticastSocket("239.255.255.250", 3702, 10, function(socket) {
         g_wsdMulticastSocket = socket;
         wsdRecvLoop(socket.socketId, deviceFoundCallback);
     });
