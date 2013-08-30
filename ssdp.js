@@ -78,6 +78,8 @@ function ssdpRecvLoop(socketId, deviceFoundCallback) {
                 var info = getSsdpDeviceNotifyInfo(e.target.result);
                 var location = info["LOCATION"];
 				
+				// TODO - Validate location is absolute
+				
 //                console.log('   loc:' + location);
 //                console.log('   st:' + info["ST"]);
 				
