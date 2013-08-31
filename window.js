@@ -1,3 +1,6 @@
+// TODO
+// - Handle relative or unqualified Locations\XAddrs
+// - Handle relative Presentation URLs (should be relative to location domain
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM Content Loaded");  
