@@ -127,9 +127,9 @@ function onSsdpXMLReadyStateChange(e) {
         if (this.status == 200 && this.responseXML) {
             var xml = this.responseXML;
             var device = this.device;
-            device.friendlyName = getXmlDataForTag(xml, "friendlyName");
-            device.manufacturer = getXmlDataForTag(xml, "manufacturer");
-            device.model = getXmlDataForTag(xml, "modelName");
+            device.friendlyName = getXmlDataForTag(xml, "friendlyName") || 'Unknown Name';
+            device.manufacturer = getXmlDataForTag(xml, "manufacturer") || 'Unknown Manufacturer';
+            device.model = getXmlDataForTag(xml, "modelName") || 'Unknown Model';
             device.presentationUrl = getXmlDataForTag(xml, "presentationURL") || "";
             
 //            console.log('dxmlrsc: ...');
