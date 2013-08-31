@@ -29,8 +29,11 @@
 			  <div id="friendlyName" data-ng-switch-when="">{{device.friendlyName}}</div>
 			  <a id="friendlyName" data-ng-switch-default href="{{device.presentationUrl}}" target="_blank">{{device.friendlyName}}</a>
 			</div>
-            <div id="details">{{device.model}} ({{device.manufacturer}})</div>
-        </li>
+			<div>
+              <span id="details">{{device.model}} ({{device.manufacturer}})</span>
+			  <span id="ip">{{device.ip}}</span>
+        	</div>
+		</li>
       </ul>
         
     </section>
