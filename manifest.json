@@ -4,6 +4,7 @@
   "version": "0.1",
   "minimum_chrome_version": "28",
   "app": { "background": { "scripts": ["app.js"] } },
+  "icons": {"256": "network-devices.png"},
   "permissions": [ 
       {"socket": ["udp-bind", "udp-send-to", "udp-multicast-membership"]},
       "http://*/", 
