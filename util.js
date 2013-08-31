@@ -50,3 +50,14 @@ function createMulticastSocket(ip, port, ttl, callback) {
         });
     });
 };
+
+function fullyQualifyUrl(domain, url) {
+    // If the url is fully qualified then there's nothing to do
+    //      - begins with 'http://' or 'https://'
+    // If it's a naked ip address then prepend 'http://'
+    //      - four numbers separated by '.'s
+    // If it's relative, get the base of the domain and prepend it
+    //      - check the domain is fully qualified
+    //      - if it is, strip of after the first slash following the protocol part
+    //      - prepend that on to given url
+}
