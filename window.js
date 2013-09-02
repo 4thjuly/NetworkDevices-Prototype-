@@ -1,6 +1,6 @@
 // TODO
-// - Handle relative or unqualified Locations\XAddrs
-// - Handle relative Presentation URLs (should be relative to location domain
+// - Figure out why some packets get dropped with WSD on ChromeOS (port reuse issue perhaps?)
+// - Add mDNS support (printers, computers etc)
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("DOM Content Loaded");  
