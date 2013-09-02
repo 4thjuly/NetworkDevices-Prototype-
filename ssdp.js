@@ -66,10 +66,10 @@ function handleSsdpMulticastMessages(deviceFoundCallback) {
 }
 
 function ssdpRecvLoop(socketId, deviceFoundCallback) {
-    console.log("ssdprl("+socketId+"):...");
+//    console.log("ssdprl("+socketId+"):...");
     chrome.socket.recvFrom(socketId, 4096, function (result) {
         if (result.resultCode >= 0) {
-            console.log("...ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
+//            console.log("...ssdprl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
             var dv = new DataView(result.data);
             var blob = new Blob([dv]);
             var fr = new FileReader();
@@ -118,7 +118,7 @@ function getSsdpDeviceXmlInfo(device, deviceFoundCallback) {
     if (!qualifiedLocation.protocol()) qualifiedLocation.protocol('http');
     xhr.device = device;
     xhr.callback = deviceFoundCallback;
-    xhr.open("GET", device.location, true);
+    xhr.open("GET", qualifiedLocation.toString(), true);
     xhr.onreadystatechange = onSsdpXMLReadyStateChange;
     xhr.send();
 }
