@@ -41,6 +41,11 @@ function ListController($scope) {
             deviceList.push(foundDevice);
         });
     }  
+    
+    $scope.navToPresentationUrl = function() {
+        console.log("Nav");
+        chrome.tabs.create({url: 'http://cnn.com'});
+    }
 	
 	$scope.refresh();
  
