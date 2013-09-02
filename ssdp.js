@@ -114,6 +114,8 @@ function getSsdpDeviceNotifyInfo(data) {
 
 function getSsdpDeviceXmlInfo(device, deviceFoundCallback) {
     var xhr = new XMLHttpRequest();
+    var qualifiedLocation = new Uri(device.location);
+    if (!qualifiedLocation.protocol()) qualifiedLocation.protocol('http');
     xhr.device = device;
     xhr.callback = deviceFoundCallback;
     xhr.open("GET", device.location, true);
