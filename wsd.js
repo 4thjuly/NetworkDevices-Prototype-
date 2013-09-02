@@ -103,7 +103,7 @@ function handleWsdHelloMessages(deviceFoundCallback) {
 
 function wsdRecvLoop(socketId, deviceFoundCallback) {
     console.log("wsdrl("+socketId+"):...");
-    chrome.socket.recvFrom(socketId, 4096, function (result) {
+    chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
             console.log("...wsdrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
             var dv = new DataView(result.data);
