@@ -130,7 +130,8 @@ function onSsdpXMLReadyStateChange(e) {
             device.friendlyName = getXmlDataForTag(xml, "friendlyName") || getXmlDataForTag(xml, "ModelDescription") || 'Unknown Name';
             device.manufacturer = getXmlDataForTag(xml, "manufacturer") || getXmlDataForTag(xml, "VendorName") || 'Unknown Manufacturer';
             device.model = getXmlDataForTag(xml, "modelName") || getXmlDataForTag(xml, "ModelName") || 'Unknown Model';
-            device.presentationUrl = getXmlDataForTag(xml, "presentationURL") || getXmlDataForTag(xml, "PresentationURL") || "";
+            device.presentationUrl = getXmlDataForTag(xml, "presentationURL") || getXmlDataForTag(xml, "PresentationURL");
+            device.presentationUrl = fullyQualifyUrl("", presentationUrl) || "";
             
 //            console.log('dxmlrsc: ...');
 //            console.log(' loc: ' + device.location);     
