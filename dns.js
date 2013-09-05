@@ -1,5 +1,4 @@
-// Handle all dns related network stuff
-
+// Handle all mdns related network stuff
 
 var DNSQuery = {
 	transactionId = 0;
