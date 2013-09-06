@@ -1,5 +1,6 @@
 // TODO
-// - Figure out why some packets get dropped with WSD on ChromeOS (port reuse issue perhaps?)
+// - Some packets get dropped on ChromeOS due to the firewall. Not sure how to fix.
+// - Remove duplicates (same or null presentation url, same friendly name and IP)
 // - Add mDNS support (printers, computers etc)
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -17,8 +18,9 @@ function ListController($scope) {
 		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
 		// Clear the old list, look for new stuff
         $scope.deviceList = [ ];
-        ssdpSearch(onDeviceFound);
-        wsdSearch(onDeviceFound);
+        //ssdpSearch(onDeviceFound);
+        //wsdSearch(onDeviceFound);
+        mdnsSearch();
     };
       
     function onDeviceFound(foundDevice) {
