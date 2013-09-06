@@ -3,10 +3,10 @@
 function DNSMessage() {
 	this.transactionId = 0;
 	this.flags = 0;
-	this.questionEntries = DNSQuestionEntry[];
-	this.answerRecords = DNSResourceRecord[];
-	this.authorityRecords = DNSResourceRecord[];
-	this.additionalRecords = DNSResourceRecord[];
+	this.questionEntries = [];
+	this.answerRecords = [];
+	this.authorityRecords = [];
+	this.additionalRecords = [];
 }
 
 function DNSQuestionEntry() {
