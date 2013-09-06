@@ -12,13 +12,13 @@ function DNSMessage() {
 function DNSQuestionEntry() {
 	this.name = '';
 	this.type = 0;
-	this.class = 0;
+	this.clss = 0;
 }
 	
 function DNSResourceRecord() {
 	this.name = '';
 	this.type = 0;
-	this.class = 1;
+	this.clss = 1;
 	this.ttl = 0;
 	this.data = new ArrayBuffer();
 }
@@ -31,14 +31,14 @@ function CreateDNSQueryMessage(name) {
 	var dnsqe = new DNSQuestionEntry();
 	dnsqe.name = name;
 	dnsqe.type = DNS_QUESTION_TYPE_PTR;
-	dnsqe.class = DNS_QUESTION_CLASS_IN;
+	dnsqe.clss = DNS_QUESTION_CLASS_IN;
 	dnsm.questionEntries.push(dnsqe);
 	return dnsm;
 }
 
 // Serialize DNS query message in to an array buffer suitable for sending over the wire
 // NB Hardcoded to a single query record
-DNSMessage.prototype.serializeQuery() {
+DNSMessage.prototype.serializeQuery = function () {
 	var buf = new ArrayBuffer(512);
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
@@ -51,7 +51,7 @@ DNSMessage.prototype.serializeQuery() {
 	}
 	view[13 + nl] = 0;
 	view[14 + nl] = (qe.type >> 8) & 0xff; view[15 + nl] = qe.type & 0xff;
-	view[16 + nl] = (qe.class >> 8) & 0xff; view[17 + nl] = qe.class & 0xff;
+	view[16 + nl] = (qe.clss >> 8) & 0xff; view[17 + nl] = qe.clss & 0xff;
 	// Everything else can remain zero
 	return buf;
 }
