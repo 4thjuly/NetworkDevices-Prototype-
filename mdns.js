@@ -42,12 +42,12 @@ DNSMessage.prototype.serializeQuery = function () {
 	var buf = new ArrayBuffer(512);
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
-	var nl = qe.length;
+	var nl = qe.name.length;
 	view[2] = (this.flags >> 8) & 0xff; view[3] = this.flags & 0xff;
 	view[4] = 0; view[5] = 1;
     view[12] = nl;
 	for (var i = 0; i < nl; i++) {
-		view[13 + i] = this.name.charAt(i);
+		view[13 + i] = qe.name.charAt(i);
 	}
 	view[13 + nl] = 0;
 	view[14 + nl] = (qe.type >> 8) & 0xff; view[15 + nl] = qe.type & 0xff;
