@@ -72,7 +72,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
-            ssdpRecvLoop(socketId, deviceFoundCallback);
+            mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
             console.log("mdnsrl: Error: " + result.resultCode);
