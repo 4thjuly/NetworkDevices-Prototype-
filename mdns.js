@@ -43,15 +43,25 @@ DNSMessage.prototype.serializeQuery = function () {
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
 	var nl = qe.name.length;
+    
+    // header stuff
 	view[2] = (this.flags >> 8) & 0xff; view[3] = this.flags & 0xff;
 	view[4] = 0; view[5] = 1;
-    view[12] = nl;
-	for (var i = 0; i < nl; i++) {
-		view[13 + i] = qe.name.charAt(i);
-	}
-	view[13 + nl] = 0;
-	view[14 + nl] = (qe.type >> 8) & 0xff; view[15 + nl] = qe.type & 0xff;
-	view[16 + nl] = (qe.clss >> 8) & 0xff; view[17 + nl] = qe.clss & 0xff;
+
+    // question entry name, removing the dots
+    var offset = 12; // questionEntries start at 12
+    var parts = q.name.split('.');
+    parts.forEach(function(part) {
+        view[offset++] = part.length;
+        for (var i = 0; i < part.length; i++) {
+		  view[offset++] = part.charCodeAt(i);
+        }
+	}});
+    
+    // remaining stuff
+	view[offset++] = 0;
+	view[offset++] = (qe.type >> 8) & 0xff; view[offset++] = qe.type & 0xff;
+	view[offset++] = (qe.clss >> 8) & 0xff; view[offset++] = qe.clss & 0xff;
 	// Everything else can remain zero
 	return buf;
 }
@@ -83,7 +93,7 @@ function mdnsSearch(deviceFoundCallback) {
         g_mdnsSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-			chrome.socket.sendTo(socketId, buf, " 224.0.0.251", 5353, function (result) {
+			chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function (result) {
 				console.log("mdnsSearch wrote:" + result.bytesWritten);
 				mdnsRecvLoop(socketId, deviceFoundCallback);
 			});
