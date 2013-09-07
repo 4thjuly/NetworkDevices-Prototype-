@@ -50,13 +50,13 @@ DNSMessage.prototype.serializeQuery = function () {
 
     // question entry name, removing the dots
     var offset = 12; // questionEntries start at 12
-    var parts = q.name.split('.');
-    parts.forEach(function(part) {
+    var parts = qe.name.split('.');
+    parts.forEach(function (part) {
         view[offset++] = part.length;
         for (var i = 0; i < part.length; i++) {
 		  view[offset++] = part.charCodeAt(i);
         }
-	}});
+	});
     
     // remaining stuff
 	view[offset++] = 0;
