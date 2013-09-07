@@ -36,6 +36,13 @@ function CreateDNSQueryMessage(name) {
 	return dnsm;
 }
 
+// Parse given arrayBuffer in to a DNS message
+function CreateDNSMessage(arrayBuffer) {
+    var dnsm = new DNSMessage();
+    var view = new Uint8Array(arrayBuffer);
+    return dnsm;
+}
+
 // Serialize DNS query message in to an array buffer suitable for sending over the wire
 // NB Hardcoded to a single query record
 DNSMessage.prototype.serializeQuery = function () {
@@ -72,6 +79,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
+            var dnsm = CreateDNSMessage(result.data);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
