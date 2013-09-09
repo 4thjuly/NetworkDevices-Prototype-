@@ -26,13 +26,23 @@ function DNSResourceRecord() {
 var DNS_QUESTION_TYPE_PTR = 12;
 var DNS_QUESTION_CLASS_IN = 1;
 	
-function CreateDNSQueryMessage(name) {
-	var dnsm = new DNSMessage();
+//function CreateDNSQueryMessage(name) {
+//	var dnsm = new DNSMessage();
+//	var dnsqe = new DNSQuestionEntry();
+//	dnsqe.name = name;
+//	dnsqe.type = DNS_QUESTION_TYPE_PTR;
+//	dnsqe.clss = DNS_QUESTION_CLASS_IN;
+//	dnsm.questionEntries.push(dnsqe);
+//	return dnsm;
+//}
+
+function DNSQueryMessage(name) {
+	this.inherits(DNSMessage);
 	var dnsqe = new DNSQuestionEntry();
 	dnsqe.name = name;
 	dnsqe.type = DNS_QUESTION_TYPE_PTR;
 	dnsqe.clss = DNS_QUESTION_CLASS_IN;
-	dnsm.questionEntries.push(dnsqe);
+	this.questionEntries.push(dnsqe);
 	return dnsm;
 }
 
@@ -78,8 +88,8 @@ var g_mdnsSearchSocket;
 function mdnsRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
-            console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
-            var dnsm = CreateDNSMessage(result.data);
+            console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
+			var dnsm = CreateDNSMessage(result.data);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
@@ -89,7 +99,8 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 }
 	
 function mdnsSearch(deviceFoundCallback) {
-	var dnsq = CreateDNSQueryMessage('_services._dns-sd._udp.local');
+//	var dnsq = CreateDNSQueryMessage('_services._dns-sd._udp.local');
+	var dnsq = new DNSQueryMessage('_services._dns-sd._udp.local');
 	var buf = dnsq.serializeQuery();
 		
     if (g_mdnsSearchSocket) {
