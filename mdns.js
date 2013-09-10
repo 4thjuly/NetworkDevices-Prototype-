@@ -98,8 +98,8 @@ function getDNSResourceRecords(arrayStream, count) {
 		arrayStream.pos += 8;
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
-		dnsr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
-		dnsr.dataText = labelsToName(arrayStream);
+		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
+		dnsrr.dataText = labelsToName(arrayStream);
 		arrayStream.pos += dataLen;
 		dnsrr.name = name;
 		resourceRecords.push(dnsrr);
