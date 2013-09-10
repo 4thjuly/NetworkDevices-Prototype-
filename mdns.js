@@ -97,10 +97,10 @@ function getDNSResourceRecords(arrayStream, count) {
 		arrayStream.pos += 8;
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
-		dnsr.data = arrayStream.array.slice(arrayStream.pos, dataLen);
+		dnsr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
 		arrayStream.pos += dataLen;
 		dnsrr.name = name;
-		resourceRecords.push(dnsqe);
+		resourceRecords.push(dnsrr);
 		console.log('  gdnsrr: ' + name);
 	}
 	return resourceRecords;
