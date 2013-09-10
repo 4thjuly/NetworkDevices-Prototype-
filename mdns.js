@@ -59,7 +59,7 @@ function labelsToName(arrayStream) {
 		if (!len) {
 			break;
 		} else if (len >= 0xc0) {
-			var ptr = ((len & 0xbf) << 8) + array[offset++];
+			var ptr = ((len & 0x3f) << 8) + array[offset++];
 			console.log('ltn: message compression (' + ptr + ')');
 			len = array[ptr++];
 			var label = '';
@@ -101,11 +101,11 @@ function getDNSResourceRecords(arrayStream, count) {
 		var name = labelsToName(arrayStream);
 		// skip the misc stuff in the middle
 		arrayStream.pos += 8;
+		// get the data
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
 		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
 		dnsrr.dataText = labelsToName(arrayStream);
-		arrayStream.pos += dataLen;
 		dnsrr.name = name;
 		resourceRecords.push(dnsrr);
 		console.log('  gdnsrr.name: ' + dnsrr.name);
