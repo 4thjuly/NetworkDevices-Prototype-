@@ -11,8 +11,8 @@ function DNSMessage() {
 
 function DNSQuestionEntry() {
 	this.name = '';
-//	this.type = 0;
-//	this.clss = 0;
+	this.type = DNS_QUESTION_TYPE_PTR;
+	this.clss = DNS_QUESTION_CLASS_IN;
 }
 	
 function DNSResourceRecord() {
@@ -33,8 +33,8 @@ function CreateDNSQueryMessage(name) {
 	var dnsm = new DNSMessage();
 	var dnsqe = new DNSQuestionEntry();
 	dnsqe.name = name;
-	dnsqe.type = DNS_QUESTION_TYPE_PTR;
-	dnsqe.clss = DNS_QUESTION_CLASS_IN;
+//	dnsqe.type = DNS_QUESTION_TYPE_PTR;
+//	dnsqe.clss = DNS_QUESTION_CLASS_IN;
 	dnsm.questionEntries.push(dnsqe);
 	return dnsm;
 }
@@ -44,19 +44,19 @@ function labelsToName(array, offset) {
   var len;
 	
   while (true) {
-	len = array[offset];
+	len = array[offset++];
 	if (!len) {
 		break;
 	} else if (len == 0xc0) {
 		// TODO: Handle Commpression
-		var ptr = array[offset+1];
+		var ptr = array[offset++];
 		console.log("ltn: ignoring message compression");
 		break;
 	}
 
     var label = '';
 	for (var i = 0; i < len; i++) {
-      	label += String.fromCharCode(array[offset + 1 + i]);
+      	label += String.fromCharCode(array[offset++]);
     }
     labels.push(label);
   }
@@ -74,6 +74,7 @@ function CreateDNSMessage(arrayBuffer) {
 			var name = labelsToName(view, DNS_QUESTION_RESOURCE_OFFSET);
 			dnsqe.name = name;
 			dnsm.questionEntries.push(dnsqe);
+			console.log('  cdnsm: ' + name);
 		}
 		// TODO: Handle answer, authority and addition records too
 	}
@@ -96,7 +97,7 @@ DNSMessage.prototype.serializeQuery = function () {
 	var buf = new ArrayBuffer(512);
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
-	var nl = qe.name.length;
+//	var nl = qe.name.length;
     
     // header stuff
 //	view[2] = (this.flags >> 8) & 0xff; view[3] = this.flags & 0xff;	
@@ -118,8 +119,8 @@ DNSMessage.prototype.serializeQuery = function () {
 	//view[offset] = 0;
 //	view[offset++] = (qe.type >> 8) & 0xff; view[offset++] = qe.type & 0xff;
 //	view[offset++] = (qe.clss >> 8) & 0xff; view[offset++] = qe.clss & 0xff;
-	//uint16ToArray(view, offset+1, qe.type);
-	//uint16ToArray(view, offset+3, qe.clss);
+	uint16ToArray(view, offset+1, qe.type);
+	uint16ToArray(view, offset+3, qe.clss);
 	
 	// Everything else can remain zero
 	return buf;

@@ -44,7 +44,7 @@ function ListController($scope) {
         });
     }  
 	
-	$scope.refresh();
+	//$scope.refresh();
  
 }
 
