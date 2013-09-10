@@ -60,7 +60,7 @@ function labelsToName(arrayStream) {
 			break;
 		} else if (len >= 0xc0) {
 			var ptr = ((len & 0x3f) << 8) + array[offset++];
-			console.log('ltn: message compression (' + ptr + ')');
+//			console.log('ltn: message compression (' + ptr + ')');
 			len = array[ptr++];
 			var label = '';
 			for (var i = 0; i < len; i++) {
