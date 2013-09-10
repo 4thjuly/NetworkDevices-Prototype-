@@ -23,6 +23,11 @@ function DNSResourceRecord() {
 	this.data = new ArrayBuffer();
 }
 
+function ArrayStream(array, initialOffset) {
+	this.array = array;
+	this.pos = initialOffset || 0;
+}
+
 var DNS_QUESTION_TYPE_PTR = 12;
 var DNS_QUESTION_CLASS_IN = 1;
 var DNS_HEADER_FLAGS_OFFSET = 2;
@@ -42,48 +47,58 @@ function createDNSQueryMessage(name) {
 	return dnsm;
 }
 
-function labelsToName(array, offset) {
-  var labels = [];
-  var len;
+function labelsToName(arrayStream) {
+	var array = arrayStream.array;
+	var offset = arrayStream.pos;
+	var labels = [];
+	var len;
 	
-  while (true) {
-	len = array[offset++];
-	if (!len) {
-		break;
-	} else if (len == 0xc0) {
-		// TODO: Handle Commpression
-		var ptr = array[offset++];
-		console.log("ltn: ignoring message compression");
-		break;
-	}
+ 	while (true) {
+		len = array[offset++];
+		if (!len) {
+			break;
+		} else if (len == 0xc0) {
+			// TODO: Handle Commpression
+			var ptr = array[offset++];
+			console.log("ltn: ignoring message compression");
+			break;
+		}
 
-    var label = '';
-	for (var i = 0; i < len; i++) {
-      	label += String.fromCharCode(array[offset++]);
-    }
-    labels.push(label);
-  }
-  return labels.join('.');
+    	var label = '';
+		for (var i = 0; i < len; i++) {
+      		label += String.fromCharCode(array[offset++]);
+    	}
+    	labels.push(label);
+  	}
+	arrayStream.pos = offset;
+  	return labels.join('.');
 };
 
-function getDNSQuestionEntries(view, offset, count) {
+
+function getDNSQuestionEntries(arrayStream, count) {
 	var questionEntries = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsqe = new DNSQuestionEntry();
-		var name = labelsToName(view, offset);
+		var name = labelsToName(arrayStream);
 		dnsqe.name = name;
+		arrayStream.pos += 4; // skip the type and class
 		questionEntries.push(dnsqe);
 		console.log('  gdnsqe: ' + name);
-		offset += name.length;
 	}
 	return questionEntries;
 }
 
-function getDNSResourceRecords(view, offset, count) {
+function getDNSResourceRecords(arrayStream, count) {
 	var resourceRecords = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsrr = new DNSResourceRecord();
-		var name = labelsToName(view, offset);
+		var name = labelsToName(arrayStream);
+		// skip the misc stuff in the middle
+		arrayStream.pos += 8;
+		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
+		arrayStream.pos += 2;
+		dnsr.data = arrayStream.array.slice(arrayStream.pos, dataLen);
+		arrayStream.pos += dataLen;
 		dnsrr.name = name;
 		resourceRecords.push(dnsqe);
 		console.log('  gdnsrr: ' + name);
@@ -95,16 +110,12 @@ function getDNSResourceRecords(view, offset, count) {
 function createDNSMessage(arrayBuffer) {
     var dnsm = new DNSMessage();
 	if (arrayBuffer) {
-    	var view = new Uint8Array(arrayBuffer);
-		dnsm.questionEntries = getDNSQuestionEntries(view, DNS_QUESTION_RESOURCE_OFFSET, arrayToInt(DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
-		
-		// TODO - how best to track the offsets?
-		offset = DNS_QUESTION_RESOURCE_OFFSET + 
-		dnsm.answerRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.authorityRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.additionalRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
-		
-		// TODO: Handle answer, authority and addition records too
+		var view = new Uint8Array(arrayBuffer);
+		var as = new ArrayStream(view, DNS_QUESTION_RESOURCE_OFFSET);
+		dnsm.questionEntries = getDNSQuestionEntries(as, arrayToUint16(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.answerRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.authorityRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.additionalRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
 	}
 	
 	return dnsm;
@@ -115,7 +126,7 @@ function uint16ToArray(array, offset, val) {
 	array[offset+1] = val & 0xff;
 }
 
-function arrayToInt(array, offset) {
+function arrayToUint16(array, offset) {
 	return (array[offset] << 8) + array[offset+1];
 }
 		
@@ -127,13 +138,10 @@ DNSMessage.prototype.serializeQuery = function () {
 	var qe = this.questionEntries[0];
 //	var nl = qe.name.length;
     
-    // header stuff
-//	view[2] = (this.flags >> 8) & 0xff; view[3] = this.flags & 0xff;	
-//	view[4] = 0; view[5] = 1;
-	//uint16ToArray(view, DNS_HEADER_FLAGS_OFFSET, this.flags);
+    // Header stuff (skipping flags)
 	uint16ToArray(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET, 1);
 				  
-    // question entry name, removing the dots
+    // Question entry name, removing the dots
     var offset = DNS_QUESTION_RESOURCE_OFFSET;
     var labels = qe.name.split('.');
     labels.forEach(function (label) {
@@ -143,14 +151,12 @@ DNSMessage.prototype.serializeQuery = function () {
         }
 	});
     
-    // remaining stuff
-	//view[offset] = 0;
-//	view[offset++] = (qe.type >> 8) & 0xff; view[offset++] = qe.type & 0xff;
-//	view[offset++] = (qe.clss >> 8) & 0xff; view[offset++] = qe.clss & 0xff;
+    // Remaining stuff
 	uint16ToArray(view, offset+1, qe.type);
 	uint16ToArray(view, offset+3, qe.clss);
 	
 	// Everything else can remain zero
+	
 	return buf;
 }
 	
