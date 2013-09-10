@@ -184,7 +184,8 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 }
 	
 function mdnsSearch(deviceFoundCallback) {
-	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
+//	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
+	var dnsq = createDNSQueryMessage('_http._tcp.local');
 	var buf = dnsq.serializeQuery();
 		
     if (g_mdnsSearchSocket) {
