@@ -21,6 +21,7 @@ function DNSResourceRecord() {
 //	this.clss = 1;
 //	this.ttl = 0;
 	this.data = new ArrayBuffer();
+	this.dataText = '';
 }
 
 function ArrayStream(array, initialOffset) {
@@ -98,10 +99,12 @@ function getDNSResourceRecords(arrayStream, count) {
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
 		dnsr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
+		dnsr.dataText = labelsToName(arrayStream);
 		arrayStream.pos += dataLen;
 		dnsrr.name = name;
 		resourceRecords.push(dnsrr);
-		console.log('  gdnsrr: ' + name);
+		console.log('  gdnsrr.name: ' + dnsrr.name);
+		console.log('  gdnsrr.data: ' + dnsrr.dataText);
 	}
 	return resourceRecords;
 }
