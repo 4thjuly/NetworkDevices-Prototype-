@@ -27,9 +27,12 @@ var DNS_QUESTION_TYPE_PTR = 12;
 var DNS_QUESTION_CLASS_IN = 1;
 var DNS_HEADER_FLAGS_OFFSET = 2;
 var DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET = 4;
+var DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET = 6;
+var DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET = 8;
+var DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET = 10;
 var DNS_QUESTION_RESOURCE_OFFSET = 12;
 		
-function CreateDNSQueryMessage(name) {
+function createDNSQueryMessage(name) {
 	var dnsm = new DNSMessage();
 	var dnsqe = new DNSQuestionEntry();
 	dnsqe.name = name;
@@ -63,19 +66,44 @@ function labelsToName(array, offset) {
   return labels.join('.');
 };
 
+function getDNSQuestionEntries(view, offset, count) {
+	var questionEntries = [];	
+	for (var i = 0; i < count; i++) {
+		var dnsqe = new DNSQuestionEntry();
+		var name = labelsToName(view, offset);
+		dnsqe.name = name;
+		questionEntries.push(dnsqe);
+		console.log('  gdnsqe: ' + name);
+		offset += name.length;
+	}
+	return questionEntries;
+}
+
+function getDNSResourceRecords(view, offset, count) {
+	var resourceRecords = [];	
+	for (var i = 0; i < count; i++) {
+		var dnsrr = new DNSResourceRecord();
+		var name = labelsToName(view, offset);
+		dnsrr.name = name;
+		resourceRecords.push(dnsqe);
+		console.log('  gdnsrr: ' + name);
+	}
+	return resourceRecords;
+}
+	
 // Parse given arrayBuffer in to a DNS message
-function CreateDNSMessage(arrayBuffer) {
+function createDNSMessage(arrayBuffer) {
     var dnsm = new DNSMessage();
 	if (arrayBuffer) {
     	var view = new Uint8Array(arrayBuffer);
-		var questionCount = arrayToInt(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET);
-		for (var i = 0; i < questionCount; i++) {
-			var dnsqe = new DNSQuestionEntry();
-			var name = labelsToName(view, DNS_QUESTION_RESOURCE_OFFSET);
-			dnsqe.name = name;
-			dnsm.questionEntries.push(dnsqe);
-			console.log('  cdnsm: ' + name);
-		}
+		dnsm.questionEntries = getDNSQuestionEntries(view, DNS_QUESTION_RESOURCE_OFFSET, arrayToInt(DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
+		
+		// TODO - how best to track the offsets?
+		offset = DNS_QUESTION_RESOURCE_OFFSET + 
+		dnsm.answerRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.authorityRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.additionalRecords = getDNSResourceRecords(view, offset, arrayToInt(DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
+		
 		// TODO: Handle answer, authority and addition records too
 	}
 	
@@ -132,7 +160,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
-			var dnsm = CreateDNSMessage(result.data);
+			var dnsm = createDNSMessage(result.data);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
@@ -142,7 +170,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 }
 	
 function mdnsSearch(deviceFoundCallback) {
-	var dnsq = CreateDNSQueryMessage('_services._dns-sd._udp.local');
+	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
 	var buf = dnsq.serializeQuery();
 		
     if (g_mdnsSearchSocket) {
