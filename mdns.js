@@ -58,18 +58,23 @@ function labelsToName(arrayStream) {
 		len = array[offset++];
 		if (!len) {
 			break;
-		} else if (len == 0xc0) {
-			// TODO: Handle Commpression
-			var ptr = array[offset++];
-			console.log("ltn: ignoring message compression");
+		} else if (len >= 0xc0) {
+			var ptr = ((len & 0xbf) << 8) + array[offset++];
+			console.log('ltn: message compression (' + ptr + ')');
+			len = array[ptr++];
+			var label = '';
+			for (var i = 0; i < len; i++) {
+      			label += String.fromCharCode(array[ptr + i]);
+    		}
+    		labels.push(label);
 			break;
+		} else {
+    		var label = '';
+			for (var i = 0; i < len; i++) {
+      			label += String.fromCharCode(array[offset++]);
+    		}
+    		labels.push(label);
 		}
-
-    	var label = '';
-		for (var i = 0; i < len; i++) {
-      		label += String.fromCharCode(array[offset++]);
-    	}
-    	labels.push(label);
   	}
 	arrayStream.pos = offset;
   	return labels.join('.');
