@@ -64,15 +64,10 @@ function labelsToName(arrayStream) {
 		if (!len) {
 			break;
 		} else if (len >= 0xc0) {
+			// Handle label compression, follow the ptr then stop
 			var ptr = ((len & 0x3f) << 8) + array[offset++];
-			var ptrAS = new ArrayStream(array, ptr);
-			var label = labelsToName(ptrAS);
-//			console.log('ltn: message compression (' + ptr + ')');
-//			len = array[ptr++];
-//			var label = '';
-//			for (var i = 0; i < len; i++) {
-//      			label += String.fromCharCode(array[ptr + i]);
-//    		}
+			var tempAS = new ArrayStream(array, ptr);
+			var label = labelsToName(tempAS);
     		labels.push(label);
 			break;
 		} else {
@@ -121,16 +116,22 @@ function getDNSResourceRecords(arrayStream, count) {
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
 		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
-		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR || dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
+		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR) {
 		    dnsrr.dataText = labelsToName(arrayStream);
 			console.log('  gdnsrr.data: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
-			// skip priority, weight and port			
+			// skip priority, weight and port	
+			// TODO: Record port for _http stuff
 			arrayStream.pos += 6;
 		    dnsrr.dataText = labelsToName(arrayStream);
+			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
 			dnsrr.IP = bytesToIPv4(arrayStream); 
 			console.log('  gdnsrr.ip: ' + dnsrr.IP);
+		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
+			// TODO: Parse the Txt record in to key/value pairs, esp 'path' for _http service
+		    dnsrr.dataText = labelsToName(arrayStream);
+			console.log('  gdnsrr.txt: ' + dnsrr.dataText);
 		} else {
 			// Just skip the data for any other record types else
 			// TODO: IPv6
@@ -212,7 +213,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 	
 function mdnsSearch(deviceFoundCallback) {
 //	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
-	var dnsq = createDNSQueryMessage('_http._tcp.local');
+	var dnsq = createDNSQueryMessage('_printer._tcp.local');
 	var buf = dnsq.serializeQuery();
 		
     if (g_mdnsSearchSocket) {
