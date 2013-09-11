@@ -1,5 +1,20 @@
 // Handle all mdns related network stuff
 
+// ---------------------------------------------------------------------------
+var DNS_RESOURCE_RECORD_TYPE_A = 1;
+var DNS_RESOURCE_RECORD_TYPE_PTR = 12;
+var DNS_RESOURCE_RECORD_TYPE_TXT = 16;
+var DNS_RESOURCE_RECORD_TYPE_SRV = 33;
+var DNS_RESOURCE_RECORD_CLASS_IN = 1;
+var DNS_HEADER_FLAGS_OFFSET = 2;
+var DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET = 4;
+var DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET = 6;
+var DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET = 8;
+var DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET = 10;
+var DNS_QUESTION_RESOURCE_OFFSET = 12;
+var MDNS_MAX_PACKET_SIZE = 9000;
+		
+// ---------------------------------------------------------------------------
 function DNSMessage() {
 //	this.transactionId = 0;
 //	this.flags = 0;
@@ -22,6 +37,7 @@ function DNSResourceRecord() {
 //	this.ttl = 0;
 	this.data = new ArrayBuffer();
 	this.dataText = '';
+	this.txtValues = { };
 	this.IP = '';
 }
 
@@ -30,18 +46,7 @@ function ArrayStream(array, initialOffset) {
 	this.pos = initialOffset || 0;
 }
 
-var DNS_RESOURCE_RECORD_TYPE_A = 1;
-var DNS_RESOURCE_RECORD_TYPE_PTR = 12;
-var DNS_RESOURCE_RECORD_TYPE_TXT = 16;
-var DNS_RESOURCE_RECORD_TYPE_SRV = 33;
-var DNS_RESOURCE_RECORD_CLASS_IN = 1;
-var DNS_HEADER_FLAGS_OFFSET = 2;
-var DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET = 4;
-var DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET = 6;
-var DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET = 8;
-var DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET = 10;
-var DNS_QUESTION_RESOURCE_OFFSET = 12;
-		
+// ---------------------------------------------------------------------------
 function createDNSQueryMessage(name) {
 	var dnsm = new DNSMessage();
 	var dnsqe = new DNSQuestionEntry();
@@ -51,7 +56,6 @@ function createDNSQueryMessage(name) {
 	dnsm.questionEntries.push(dnsqe);
 	return dnsm;
 }
-
 
 function labelsToName(arrayStream) {
 	var array = arrayStream.array;
@@ -80,6 +84,28 @@ function labelsToName(arrayStream) {
   	}
 	arrayStream.pos = offset;
   	return labels.join('.');
+};
+
+function txtRecordToValues(arrayStream) {
+	var array = arrayStream.array;
+	var offset = arrayStream.pos;
+	var values = { };
+	
+ 	while (true) {
+		len = array[offset++];
+		if (!len) {
+			break;
+		} else {
+    		var nameValueTxt = '';
+			for (var i = 0; i < len; i++) {
+      			nameValue += String.fromCharCode(array[offset++]);
+    		}
+			var nameValue = nameValueTxt.split('=');
+			values[nameValue[0]] = nameValue[1];			
+		}
+  	}
+	arrayStream.pos = offset;
+  	return values;
 };
 
 function getDNSQuestionEntries(arrayStream, count) {
@@ -130,8 +156,9 @@ function getDNSResourceRecords(arrayStream, count) {
 			console.log('  gdnsrr.ip: ' + dnsrr.IP);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
 			// TODO: Parse the Txt record in to key/value pairs, esp 'path' for _http service
-		    dnsrr.dataText = labelsToName(arrayStream);
-			console.log('  gdnsrr.txt: ' + dnsrr.dataText);
+		    // dnsrr.dataText = labelsToName(arrayStream);
+			dnsrr.txtValues = txtRecordToValues(arrayStream);
+			console.log('  gdnsrr.txtValue: ' + Object.keys(dnsrr.txtValues).length);
 		} else {
 			// Just skip the data for any other record types else
 			// TODO: IPv6
@@ -199,7 +226,7 @@ DNSMessage.prototype.serializeQuery = function () {
 var g_mdnsSearchSocket;	
 	
 function mdnsRecvLoop(socketId, deviceFoundCallback) {
-    chrome.socket.recvFrom(socketId, 65507, function (result) {
+    chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
