@@ -11,17 +11,18 @@ function DNSMessage() {
 
 function DNSQuestionEntry() {
 	this.name = '';
-	this.type = DNS_QUESTION_TYPE_PTR;
-	this.clss = DNS_QUESTION_CLASS_IN;
+	this.type = DNS_RESOURCE_RECORD_TYPE_PTR;
+	this.clss = DNS_RESOURCE_RECORD_CLASS_IN;
 }
 	
 function DNSResourceRecord() {
 	this.name = '';
-//	this.type = 0;
+	this.type = 0;
 //	this.clss = 1;
 //	this.ttl = 0;
 	this.data = new ArrayBuffer();
 	this.dataText = '';
+	this.IP = '';
 }
 
 function ArrayStream(array, initialOffset) {
@@ -29,8 +30,11 @@ function ArrayStream(array, initialOffset) {
 	this.pos = initialOffset || 0;
 }
 
-var DNS_QUESTION_TYPE_PTR = 12;
-var DNS_QUESTION_CLASS_IN = 1;
+var DNS_RESOURCE_RECORD_TYPE_A = 1;
+var DNS_RESOURCE_RECORD_TYPE_PTR = 12;
+var DNS_RESOURCE_RECORD_TYPE_TXT = 33;
+var DNS_RESOURCE_RECORD_TYPE_SRV = 33;
+var DNS_RESOURCE_RECORD_CLASS_IN = 1;
 var DNS_HEADER_FLAGS_OFFSET = 2;
 var DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET = 4;
 var DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET = 6;
@@ -48,6 +52,7 @@ function createDNSQueryMessage(name) {
 	return dnsm;
 }
 
+
 function labelsToName(arrayStream) {
 	var array = arrayStream.array;
 	var offset = arrayStream.pos;
@@ -60,12 +65,14 @@ function labelsToName(arrayStream) {
 			break;
 		} else if (len >= 0xc0) {
 			var ptr = ((len & 0x3f) << 8) + array[offset++];
+			var ptrAS = new ArrayStream(arrayStream, ptr);
+			var label = labelsToName(ptrAS);
 //			console.log('ltn: message compression (' + ptr + ')');
-			len = array[ptr++];
-			var label = '';
-			for (var i = 0; i < len; i++) {
-      			label += String.fromCharCode(array[ptr + i]);
-    		}
+//			len = array[ptr++];
+//			var label = '';
+//			for (var i = 0; i < len; i++) {
+//      			label += String.fromCharCode(array[ptr + i]);
+//    		}
     		labels.push(label);
 			break;
 		} else {
@@ -80,7 +87,6 @@ function labelsToName(arrayStream) {
   	return labels.join('.');
 };
 
-
 function getDNSQuestionEntries(arrayStream, count) {
 	var questionEntries = [];	
 	for (var i = 0; i < count; i++) {
@@ -94,22 +100,43 @@ function getDNSQuestionEntries(arrayStream, count) {
 	return questionEntries;
 }
 
+function bytesToIPv4(arrayStream) {
+	var arr = arrayStream.array;
+	var pos = arrayStream.pos;
+	var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
+	arrayStream.pos += 4;
+	return ip;
+}
+
 function getDNSResourceRecords(arrayStream, count) {
 	var resourceRecords = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsrr = new DNSResourceRecord();
-		var name = labelsToName(arrayStream);
-		// skip the misc stuff in the middle
-		arrayStream.pos += 8;
-		// get the data
+		dnsrr.name = labelsToName(arrayStream);
+		console.log('  gdnsrr.name: ' + dnsrr.name);
+		dnsrr.type = arrayToUint16(arrayStream.array, arrayStream.pos);
+		// skip the type, class & ttl	
+		arrayStream.pos += 8;	
+		// get the data			
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
 		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
-		dnsrr.dataText = labelsToName(arrayStream);
-		dnsrr.name = name;
+		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR || dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
+		    dnsrr.dataText = labelsToName(arrayStream);
+			console.log('  gdnsrr.data: ' + dnsrr.dataText);
+		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
+			// skip priority, weight and port			
+			arrayStream.pos += 6;
+		    dnsrr.dataText = labelsToName(arrayStream);
+		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
+			dnsrr.IP = bytesToIPv4(arrayStream); 
+			console.log('  gdnsrr.ip: ' + dnsrr.IP);
+		} else {
+			// Just skip the data for any other record types else
+			// TODO: IPv6
+			arrayStream.pos += dataLen;
+		}
 		resourceRecords.push(dnsrr);
-		console.log('  gdnsrr.name: ' + dnsrr.name);
-		console.log('  gdnsrr.data: ' + dnsrr.dataText);
 	}
 	return resourceRecords;
 }
