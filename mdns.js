@@ -97,7 +97,7 @@ function txtRecordToValues(arrayStream) {
 	labels.forEach(function(label) {
 		var nameValue = label.split('=');
 		if (nameValue.length == 2) values[nameValue[0]] = nameValue[1];			
-	}):
+	});
   	return values;
 };
 
