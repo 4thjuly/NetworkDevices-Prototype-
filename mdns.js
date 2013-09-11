@@ -58,6 +58,11 @@ function createDNSQueryMessage(name) {
 }
 
 function labelsToName(arrayStream) {
+  	return getLabels(arrayStream).join('.');
+};
+
+// Parse out labels (byte counted strings with compression)
+function getLabels(arrayStream) {
 	var array = arrayStream.array;
 	var offset = arrayStream.pos;
 	var labels = [];
@@ -83,28 +88,16 @@ function labelsToName(arrayStream) {
 		}
   	}
 	arrayStream.pos = offset;
-  	return labels.join('.');
+  	return labels;
 };
 
 function txtRecordToValues(arrayStream) {
-	var array = arrayStream.array;
-	var offset = arrayStream.pos;
 	var values = { };
-	
- 	while (true) {
-		len = array[offset++];
-		if (!len) {
-			break;
-		} else {
-    		var nameValueTxt = '';
-			for (var i = 0; i < len; i++) {
-      			nameValue += String.fromCharCode(array[offset++]);
-    		}
-			var nameValue = nameValueTxt.split('=');
-			values[nameValue[0]] = nameValue[1];			
-		}
-  	}
-	arrayStream.pos = offset;
+	labels = getLabels(arrayStream);
+	labels.forEach(function(label) {
+		var nameValue = label.split('=');
+		if (nameValue.length == 2) values[nameValue[0]] = nameValue[1];			
+	}):
   	return values;
 };
 
