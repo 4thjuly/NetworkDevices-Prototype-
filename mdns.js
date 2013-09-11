@@ -57,18 +57,19 @@ function createDNSQueryMessage(name) {
 	return dnsm;
 }
 
-function labelsToName(arrayStream) {
-  	return getLabels(arrayStream).join('.');
+function labelsToName(arrayStream, len) {
+  	return getLabels(arrayStream, len).join('.');
 };
 
 // Parse out labels (byte counted strings with compression)
-function getLabels(arrayStream) {
+function getLabels(arrayStream, len) {
 	var array = arrayStream.array;
 	var offset = arrayStream.pos;
 	var labels = [];
 	var labelLen;
+	var dataEnd = offset + len;
 	
- 	while (offset < array.length) {
+ 	while (offset < dataEnd) {
 		labelLen = array[offset++];
 		if (!labelLen) {
 			break;
@@ -91,9 +92,9 @@ function getLabels(arrayStream) {
   	return labels;
 };
 
-function txtRecordToValues(arrayStream) {
+function txtRecordToValues(arrayStream, len) {
 	var values = { };
-	var labels = getLabels(arrayStream);
+	var labels = getLabels(arrayStream, len);
 	labels.forEach(function(label) {
 		var nameValue = label.split('=');
 		if (nameValue.length == 2) values[nameValue[0]] = nameValue[1];			
@@ -134,24 +135,26 @@ function getDNSResourceRecords(arrayStream, count) {
 		// get the data			
 		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
 		arrayStream.pos += 2;
+		var dataPos = arrayStream.pos; 
+		// NB Can just create a temp arraystream since compression ptrs can point anywhere, not just in the data
 		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
-		var dataAS = new ArrayStream(dnsrr.data);
+		// var dataAS = new ArrayStream(dnsrr.data);
 		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR) {
-		    dnsrr.dataText = labelsToName(dataAS);
+		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
 			console.log('  gdnsrr.data: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
 			// skip priority, weight and port	
 			// TODO: Record port for _http stuff
-			dataAS.pos += 6;
-		    dnsrr.dataText = labelsToName(dataAS);
+			arrayStream.pos += 6;
+		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
 			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
-			dnsrr.IP = bytesToIPv4(dataAS); 
+			dnsrr.IP = bytesToIPv4(arrayStream); 
 			console.log('  gdnsrr.ip: ' + dnsrr.IP);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
 			// TODO: Parse the Txt record in to key/value pairs, esp 'path' for _http service
 		    // dnsrr.dataText = labelsToName(arrayStream);
-			dnsrr.txtValues = txtRecordToValues(dataAS);
+			dnsrr.txtValues = txtRecordToValues(arrayStream, dataLen);
 			console.log('  gdnsrr.txtValue: ' + Object.keys(dnsrr.txtValues).length);
 		} else {
 			// Just skip the data for any other record types else
@@ -159,7 +162,7 @@ function getDNSResourceRecords(arrayStream, count) {
 			console.log('gdnsrr: Skipped record type: ' + dnsrr.type);
 		}
 		resourceRecords.push(dnsrr);
-		arrayStream.pos += dataLen;
+		arrayStream.pos = dataPos + dataLen;
 	}
 	return resourceRecords;
 }
