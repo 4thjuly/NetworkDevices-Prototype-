@@ -158,8 +158,8 @@ function getDNSResourceRecords(arrayStream, count) {
 			// TODO: IPv6
 			console.log('gdnsrr: Skipped record type: ' + dnsrr.type);
 		}
-		arrayStream.pos += dataLen;
 		resourceRecords.push(dnsrr);
+		arrayStream.pos += dataLen;
 	}
 	return resourceRecords;
 }
