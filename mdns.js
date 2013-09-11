@@ -67,7 +67,7 @@ function getLabels(arrayStream, len) {
 	var offset = arrayStream.pos;
 	var labels = [];
 	var labelLen;
-	var dataEnd = offset + len;
+	var dataEnd = len ? offset + len : array.length;
 	
  	while (offset < dataEnd) {
 		labelLen = array[offset++];
