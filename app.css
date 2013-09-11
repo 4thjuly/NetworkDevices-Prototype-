@@ -12,6 +12,7 @@ html, body {
 body {
     padding: 5px;
     overflow: auto;
+	background-color: #F0F0F0;
 }
 
 #main > nav {

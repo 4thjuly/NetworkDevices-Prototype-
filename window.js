@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function ListController($scope) {
     $scope.deviceList = [ ];
  
+	
     $scope.refresh = function() {
         console.log("Refresh");
 		// Disable refresh button for a second to make it obvious something is happening
@@ -18,11 +19,17 @@ function ListController($scope) {
 		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
 		// Clear the old list, look for new stuff
         $scope.deviceList = [ ];
+		searchForDevices(onDeviceFound);
+	};
+    
+	// Specifically, seach for anything that has a 'friendly name', ideally a web page we can nav to
+	// This, for example, will skip lots of misc mdns services
+	function searchForDevices(onDeviceFound) {
         //ssdpSearch(onDeviceFound);
         //wsdSearch(onDeviceFound);
         mdnsSearch();
-    };
-      
+	}
+	
     function onDeviceFound(foundDevice) {
         $scope.$apply(function() {
             var deviceList = $scope.deviceList;

@@ -31,14 +31,15 @@ function DNSQuestionEntry() {
 }
 	
 function DNSResourceRecord() {
-	this.name = '';
+	this.name = undefined;
 	this.type = 0;
 //	this.clss = 1;
 //	this.ttl = 0;
-	this.data = new ArrayBuffer();
-	this.dataText = '';
+	this.data = undefined;
+	this.dataText = undefined;
 	this.txtValues = { };
-	this.IP = '';
+	this.IP = undefined;
+	this.port = undefined;
 }
 
 function ArrayStream(array, initialOffset) {
@@ -56,6 +57,8 @@ function createDNSQueryMessage(name) {
 	dnsm.questionEntries.push(dnsqe);
 	return dnsm;
 }
+
+// TOOD: OOPify all the ArrayStream stuff.
 
 function labelsToName(arrayStream, len) {
   	return getLabels(arrayStream, len).join('.');
@@ -143,9 +146,9 @@ function getDNSResourceRecords(arrayStream, count) {
 		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
 			console.log('  gdnsrr.data: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
-			// skip priority, weight and port	
-			// TODO: Record port for _http stuff
-			arrayStream.pos += 6;
+			arrayStream.pos += 4; // skip priority, weight
+			dnsrr.port = arrayToUint16(arrayStream.array, arrayStream.pos); 
+			arrayStream.pos += 2; // port
 		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
 			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
@@ -220,7 +223,58 @@ DNSMessage.prototype.serializeQuery = function () {
 	
 	return buf;
 }
+
+DNSMessage.prototype.friendName() = function() {
+	// Search the records looking for name, return the first part
+	this.answerRecords.forEach(function (record) {
+		if (record.dataText) { 
+			var dotpos = record.dataText.indexOf('.');
+			if (dotpos > 0) { 
+				return record.dataText.slice(0, dotpos); 
+			} else {
+				return record.dataText;
+			}
+		}
+	});
+	return 'Unknown'; // Better then nothing
+}
+
+DNSMessage.prototype.IP() = function() {
+	// IP should be in an A record
+	this.additionalRecords.forEach(function (record) {
+		if (record.IP) { return record.IP; };
+	});
+}
+
+DNSMessage.prototype.port() = function() {
+	// Port should be in an SRV record
+	this.additionalRecords.forEach(function (record) {
+		if (record.port) { return record.port; };
+	});
+}
+
+DNSMessage.prototype.path() = Function() {
+	// Path should be in a text value
+	this.additionalRecords.forEach(function (record) {
+		if (record.txtValues['path']) { return record.txtValues['path']; };
+	});
+}
+
+// Construct a presentation url: http:// + ip + port + path
+DNSMessage.prototype.presentationUrl() = function() {
+	var ip = IP();
+	var port = port();
+	var path = path();
+	var url = 'http://';
 	
+	if (ip) {
+		url += ip;
+		if (port) { url += ';' + port; }
+		if (path) { url += path; }
+		return url;
+	}
+}
+
 var g_mdnsSearchSocket;	
 	
 function mdnsRecvLoop(socketId, deviceFoundCallback) {
@@ -228,6 +282,8 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
+			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.IP(), null, null, null, dnsm.friendlyName(), dnsm.presentationUrl());
+			deviceFoundCallback(device);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
@@ -236,9 +292,11 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
     });   
 }
 	
+// Look for something with a web page (http)
 function mdnsSearch(deviceFoundCallback) {
 //	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
-	var dnsq = createDNSQueryMessage('_printer._tcp.local');
+//	var dnsq = createDNSQueryMessage('_printer._tcp.local');
+	var dnsq = createDNSQueryMessage('_http._tcp.local');
 	var buf = dnsq.serializeQuery();
 		
     if (g_mdnsSearchSocket) {

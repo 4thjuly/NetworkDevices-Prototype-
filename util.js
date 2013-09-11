@@ -1,12 +1,12 @@
 
 function Device(location, ip, endpointReference, manufacturer, model, friendlyName, presentationUrl) {
-    this.location = location;
+    this.location = location; // Unique reference to a thing on the local network, something that can provide metadata
     this.manufacturer = manufacturer;
     this.model = model;
     this.friendlyName = friendlyName;
     this.ip = ip;
-    this.presentationUrl = presentationUrl;
-    this.endpointReference = endpointReference;
+    this.presentationUrl = presentationUrl; // Settings or info page
+    this.endpointReference = endpointReference; // Reference to the metadata
 }
 
 function getXmlDataForTag(xml, tagName) {
