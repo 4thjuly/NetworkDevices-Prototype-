@@ -267,9 +267,9 @@ DNSMessage.prototype.path = function() {
 
 // Construct a presentation url: http:// + ip + port + path
 DNSMessage.prototype.presentationUrl = function() {
-	var ip = IP();
-	var port = port();
-	var path = path();
+	var ip = this.IP();
+	var port = this.port();
+	var path = this.path();
 	var url = 'http://';
 	
 	if (ip) {
