@@ -176,10 +176,10 @@ function onWsdXMLReadyStateChange(e) {
 				device.presentationUrl = '';
 			}
             
-            console.log('wstgrsc: ...');
-            console.log(' loc: ' + device.location);     
-            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
-            console.log(' purl: ' + device.presentationUrl);  
+//            console.log('wstgrsc: ...');
+//            console.log(' loc: ' + device.location);     
+//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+//            console.log(' purl: ' + device.presentationUrl);  
            
             this.callback(device);
         }

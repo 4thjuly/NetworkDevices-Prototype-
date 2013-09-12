@@ -40,12 +40,14 @@ function ListController($scope) {
                     // Already in the list, ignore it
 					console.log('odf: Ignoring dup: ' + foundDevice.friendlyName);
                     return;
-                } else if (foundDevice.friendlyName == device.friendlyName) {
-					if ((foundDevice.ip == device.ip) && (foundDevice.presentationUrl == device.presentationUrl)) {
+                } else if ((foundDevice.friendlyName == device.friendlyName) && (foundDevice.ip == device.ip)) {
+					if (foundDevice.presentationUrl == device.presentationUrl) {
 						// Even if locations differ, if everything else is the same may as way skip it
 						console.log('odf: Ignoring dup: ' + foundDevice.friendlyName);
 						return;
 					}
+					// TODO: Someway to de-dup different presentation urls for the same friendly name and ip? 
+					// Maybe just ignore?
 				} else if (foundDevice.friendlyName.localeCompare(device.friendlyName) < 1) {
 					// Insert it here
 					deviceList.splice(i, 0, foundDevice);
