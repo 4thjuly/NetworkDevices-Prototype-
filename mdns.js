@@ -274,7 +274,7 @@ DNSMessage.prototype.presentationUrl = function() {
 	
 	if (ip) {
 		url += ip;
-		if (port) { url += ';' + port; }
+		if (port) { url += ':' + port; }
 		if (path) { url += path; }
 		return url;
 	}
@@ -287,7 +287,9 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
         if (result.resultCode >= 0) {
             console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
-			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.IP(), null, null, null, dnsm.friendlyName(), dnsm.presentationUrl());
+			// HACK - Using a manufacturer as 'HTTP' just to make things look pretty. 
+			// TODO - For common device types (like printer) query for the txt records that have all the info
+			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.IP(), null, 'HTTP', null, dnsm.friendlyName(), dnsm.presentationUrl());
 			deviceFoundCallback(device);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
