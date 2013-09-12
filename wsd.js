@@ -114,7 +114,7 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
                 var parser = new DOMParser();
                 var xml = parser.parseFromString(txt,"text/xml");
                 // TODO Debug: show types
-                console.log("wsdrcl: types: " + getXmlDataForTag(xml, "Types"));
+//                console.log("wsdrcl: types: " + getXmlDataForTag(xml, "Types"));
                 // Location should be in XAddrs
                 // TODO Some devices may only have an EndPointReference and need a resolve to get the XAddr
                 var location = getXmlDataForTag(xml, "XAddrs");
@@ -123,7 +123,7 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
 					g_wsdLocations[location] = true;
 					// HACK - Just grab the first address if there are multiple
 					location = location.split(' ')[0];
-					console.log("wsdrcl: " + location);
+//					console.log("wsdrcl: " + location);
 					var endpointReference = getXmlDataForTag(xml, "Address");
 					var device = new Device(location, result.address, endpointReference);
 					getWsdDeviceXmlInfo(device, deviceFoundCallback);
@@ -176,9 +176,9 @@ function onWsdXMLReadyStateChange(e) {
 				device.presentationUrl = '';
 			}
             
-//            console.log('wstgrsc: ...');
+            console.log('wstgrsc: ...');
 //            console.log(' loc: ' + device.location);     
-//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
 //            console.log(' purl: ' + device.presentationUrl);  
            
             this.callback(device);

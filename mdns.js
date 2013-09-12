@@ -114,7 +114,7 @@ function getDNSQuestionEntries(arrayStream, count) {
 		dnsqe.name = name;
 		arrayStream.pos += 4; // skip the type and class
 		questionEntries.push(dnsqe);
-		console.log('  gdnsqe: ' + name);
+//		console.log('  gdnsqe: ' + name);
 	}
 	return questionEntries;
 }
@@ -132,7 +132,7 @@ function getDNSResourceRecords(arrayStream, count) {
 	for (var i = 0; i < count; i++) {
 		var dnsrr = new DNSResourceRecord();
 		dnsrr.name = labelsToName(arrayStream);
-		console.log('  gdnsrr.name('+i+'): ' + dnsrr.name);
+//		console.log('  gdnsrr.name('+i+'): ' + dnsrr.name);
 		dnsrr.type = arrayToUint16(arrayStream.array, arrayStream.pos);
 		// skip the type, class & ttl	
 		arrayStream.pos += 8;	
@@ -145,21 +145,19 @@ function getDNSResourceRecords(arrayStream, count) {
 		// var dataAS = new ArrayStream(dnsrr.data);
 		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR) {
 		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
-			console.log('  gdnsrr.data: ' + dnsrr.dataText);
+//			console.log('  gdnsrr.data: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
 			arrayStream.pos += 4; // skip priority, weight
 			dnsrr.port = arrayToUint16(arrayStream.array, arrayStream.pos); 
 			arrayStream.pos += 2; // port
 		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
-			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
+//			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
 			dnsrr.ip = bytesToIPv4(arrayStream); 
-			console.log('  gdnsrr.ip: ' + dnsrr.ip);
+//			console.log('  gdnsrr.ip: ' + dnsrr.ip);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
-			// TODO: Parse the Txt record in to key/value pairs, esp 'path' for _http service
-		    // dnsrr.dataText = labelsToName(arrayStream);
 			dnsrr.txtValues = txtRecordToValues(arrayStream, dataLen);
-			console.log('  gdnsrr.txtValue: ' + Object.keys(dnsrr.txtValues).length);
+//			console.log('  gdnsrr.txtValue: ' + Object.keys(dnsrr.txtValues).length);
 		} else {
 			// Just skip the data for any other record types else
 			// TODO: IPv6
@@ -201,7 +199,6 @@ DNSMessage.prototype.serializeQuery = function () {
 	var buf = new ArrayBuffer(512);
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
-//	var nl = qe.name.length;
     
     // Header stuff (skipping flags)
 	uint16ToArray(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET, 1);
@@ -280,7 +277,7 @@ DNSMessage.prototype.presentationUrl = function() {
 		} else {
 			url += '/';
 		}
-		console.log('dnsm.purl: ' + url);
+//		console.log('dnsm.purl: ' + url);
 		return url;
 	}
 }
@@ -294,12 +291,14 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 			var dnsm = createDNSMessage(result.data);
 			// HACK - Using a manufacturer as 'HTTP' just to make things look pretty. 
 			// TODO - For common device types (like printer) query for the txt records that have all the info
-			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.ip(), null, 'HTTP', null, dnsm.friendlyName(), dnsm.presentationUrl());
+			var friendlyName = dnsm.friendlyName();
+			console.log('  mdnsrl:' + friendlyName); 
+			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.ip(), null, 'HTTP', null, friendlyName, dnsm.presentationUrl());
 			deviceFoundCallback(device);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
             // TODO: Handle error -4?
-            console.log("mdnsrl: Error: " + result.resultCode);
+            console.log("  mdnsrl: Error: " + result.resultCode);
         }
     });   
 }
