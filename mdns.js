@@ -237,7 +237,7 @@ DNSMessage.prototype.friendlyName = function() {
 				return record.dataText;
 			}
 		}
-	});
+	}
 	return 'Unknown'; // Better then nothing
 }
 
