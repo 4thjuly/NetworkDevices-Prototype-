@@ -278,7 +278,7 @@ DNSMessage.prototype.presentationUrl = function() {
 		if (path) { 
 			url += path; 
 		} else {
-			url += '\\';
+			url += '/';
 		}
 		console.log('dnsm.purl: ' + url);
 		return url;
