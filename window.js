@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function ListController($scope) {
     $scope.deviceList = [ ];
- 
+	var presentationUrls = { }; // To help with de-duping 
 	
     $scope.refresh = function() {
         console.log("Refresh");
@@ -33,6 +33,28 @@ function ListController($scope) {
     function onDeviceFound(foundDevice) {
         $scope.$apply(function() {
             var deviceList = $scope.deviceList;
+			
+			// Hide things without presentation urls (might make this a setting)
+			if (!foundDevice.presentationUrl) { 
+				console.log('odf: Ignoring hidden device: ' + foundDevice.friendlyName);
+				return; 
+			}
+				
+			// Skip devices with the same presentation url (merge the details)
+			var prevDevice = presentationUrls[foundDevice.presentationUrl]; 
+			if (prevDevice) {
+				// HACK: Pick the longest friendly name
+				if (foundDevice.friendlyName.length > prevDevice.friendlyName.length) {
+					prevDevice.friendlyName = foundDevice.friendlyName;
+				}
+				// HACK: Pick more details over less
+				if (!prevDevice.model) {
+					prevDevice.model = foundDevice.model;
+					prevDevice.manufacturer = foundDevice.manufacturer;
+				}
+				return;
+			}
+			
 			// NB Assumes the list of devices is small 
             for (var i = 0; i < deviceList.length; i++) {
                 var device = deviceList[i];
@@ -51,11 +73,13 @@ function ListController($scope) {
 				} else if (foundDevice.friendlyName.localeCompare(device.friendlyName) < 1) {
 					// Insert it here
 					deviceList.splice(i, 0, foundDevice);
+					presentationUrls[foundDevice.presentationUrl] = foundDevice;
 					return;
 				}
             }
             // Append it on the end
             deviceList.push(foundDevice);
+			presentationUrls[foundDevice.presentationUrl] = foundDevice;
         });
     }  
 	
