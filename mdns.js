@@ -38,7 +38,7 @@ function DNSResourceRecord() {
 	this.data = undefined;
 	this.dataText = undefined;
 	this.txtValues = { };
-	this.IP = undefined;
+	this.ip = undefined;
 	this.port = undefined;
 }
 
@@ -153,8 +153,8 @@ function getDNSResourceRecords(arrayStream, count) {
 		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
 			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
-			dnsrr.IP = bytesToIPv4(arrayStream); 
-			console.log('  gdnsrr.ip: ' + dnsrr.IP);
+			dnsrr.ip = bytesToIPv4(arrayStream); 
+			console.log('  gdnsrr.ip: ' + dnsrr.ip);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
 			// TODO: Parse the Txt record in to key/value pairs, esp 'path' for _http service
 		    // dnsrr.dataText = labelsToName(arrayStream);
@@ -241,11 +241,11 @@ DNSMessage.prototype.friendlyName = function() {
 	return 'Unknown'; // Better then nothing
 }
 
-DNSMessage.prototype.IP = function() {
+DNSMessage.prototype.ip = function() {
 	// IP should be in an A record
 	for (var i = 0; i < this.additionalRecords.length; i++) {
 		var record = this.additionalRecords[i];
-		if (record.IP) { return record.IP; };
+		if (record.ip) { return record.ip; };
 	}
 }
 
@@ -267,7 +267,7 @@ DNSMessage.prototype.path = function() {
 
 // Construct a presentation url: http:// + ip + port + path
 DNSMessage.prototype.presentationUrl = function() {
-	var ip = this.IP();
+	var ip = this.ip();
 	var port = this.port();
 	var path = this.path();
 	var url = 'http://';
@@ -289,7 +289,7 @@ function mdnsRecvLoop(socketId, deviceFoundCallback) {
 			var dnsm = createDNSMessage(result.data);
 			// HACK - Using a manufacturer as 'HTTP' just to make things look pretty. 
 			// TODO - For common device types (like printer) query for the txt records that have all the info
-			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.IP(), null, 'HTTP', null, dnsm.friendlyName(), dnsm.presentationUrl());
+			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.ip(), null, 'HTTP', null, dnsm.friendlyName(), dnsm.presentationUrl());
 			deviceFoundCallback(device);
             mdnsRecvLoop(socketId, deviceFoundCallback);
         } else {
