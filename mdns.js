@@ -275,7 +275,11 @@ DNSMessage.prototype.presentationUrl = function() {
 	if (ip) {
 		url += ip;
 		if (port) { url += ':' + port; }
-		if (path) { url += path; }
+		if (path) { 
+			url += path; 
+		} else {
+			url += '\';
+		}
 		console.log('dnsm.purl: ' + url);
 		return url;
 	}
