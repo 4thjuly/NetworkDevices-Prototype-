@@ -62,7 +62,7 @@ function createDNSQueryMessage(name) {
 
 function labelsToName(arrayStream, len) {
   	return getLabels(arrayStream, len).join('.');
-};
+}
 
 // Parse out labels (byte counted strings with compression)
 function getLabels(arrayStream, len) {
@@ -71,6 +71,7 @@ function getLabels(arrayStream, len) {
 	var labels = [];
 	var labelLen;
 	var dataEnd = len ? offset + len : array.length;
+	var label;
 	
  	while (offset < dataEnd) {
 		labelLen = array[offset++];
@@ -80,11 +81,11 @@ function getLabels(arrayStream, len) {
 			// Handle label compression, follow the ptr then stop
 			var ptr = ((labelLen & 0x3f) << 8) + array[offset++];
 			var tempAS = new ArrayStream(array, ptr);
-			var label = labelsToName(tempAS);
+			label = labelsToName(tempAS);
     		labels.push(label);
 			break;
 		} else {
-    		var label = '';
+    		label = '';
 			for (var i = 0; i < labelLen; i++) {
       			label += String.fromCharCode(array[offset++]);
     		}
