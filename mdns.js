@@ -246,7 +246,7 @@ DNSMessage.prototype.IP = function() {
 	for (var i = 0; i < this.additionalRecords.length; i++) {
 		var record = this.additionalRecords[i];
 		if (record.IP) { return record.IP; };
-	});
+	}
 }
 
 DNSMessage.prototype.port = function() {
@@ -254,7 +254,7 @@ DNSMessage.prototype.port = function() {
 	for (var i = 0; i < this.additionalRecords.length; i++) {
 		var record = this.additionalRecords[i];
 		if (record.port) { return record.port; };
-	});
+	}
 }
 
 DNSMessage.prototype.path = function() {
@@ -262,7 +262,7 @@ DNSMessage.prototype.path = function() {
 	for (var i = 0; i < this.additionalRecords.length; i++) {
 		var record = this.additionalRecords[i];
 		if (record.txtValues['path']) { return record.txtValues['path']; };
-	});
+	}
 }
 
 // Construct a presentation url: http:// + ip + port + path
