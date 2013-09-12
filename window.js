@@ -39,7 +39,7 @@ function ListController($scope) {
                 if (foundDevice.location == device.location) {
                     // Already in the list, ignore it
                     return;
-                } else if ((foundDevice.friendlyName == device.friendlyName) && (foundDevice.ip == device.ip) && (foundDevice.presentationUrl == device.presentationUrl) {
+                } else if ((foundDevice.friendlyName == device.friendlyName) && (foundDevice.ip == device.ip) && (foundDevice.presentationUrl == device.presentationUrl)) {
 					// Even if locations differ, if everything else is the same may as way skip it
 					return;
 				} else if (foundDevice.friendlyName.localeCompare(device.friendlyName) < 1) {
