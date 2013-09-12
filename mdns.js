@@ -225,7 +225,7 @@ DNSMessage.prototype.serializeQuery = function () {
 	return buf;
 }
 
-DNSMessage.prototype.friendName() = function() {
+DNSMessage.prototype.friendlyName = function() {
 	// Search the records looking for name, return the first part
 	this.answerRecords.forEach(function (record) {
 		if (record.dataText) { 
@@ -240,21 +240,21 @@ DNSMessage.prototype.friendName() = function() {
 	return 'Unknown'; // Better then nothing
 }
 
-DNSMessage.prototype.IP() = function() {
+DNSMessage.prototype.IP = function() {
 	// IP should be in an A record
 	this.additionalRecords.forEach(function (record) {
 		if (record.IP) { return record.IP; };
 	});
 }
 
-DNSMessage.prototype.port() = function() {
+DNSMessage.prototype.port = function() {
 	// Port should be in an SRV record
 	this.additionalRecords.forEach(function (record) {
 		if (record.port) { return record.port; };
 	});
 }
 
-DNSMessage.prototype.path() = function() {
+DNSMessage.prototype.path = function() {
 	// Path should be in a text value
 	this.additionalRecords.forEach(function (record) {
 		if (record.txtValues['path']) { return record.txtValues['path']; };
@@ -262,7 +262,7 @@ DNSMessage.prototype.path() = function() {
 }
 
 // Construct a presentation url: http:// + ip + port + path
-DNSMessage.prototype.presentationUrl() = function() {
+DNSMessage.prototype.presentationUrl = function() {
 	var ip = IP();
 	var port = port();
 	var path = path();
