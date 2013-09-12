@@ -19,6 +19,7 @@ function ListController($scope) {
 		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
 		// Clear the old list, look for new stuff
         $scope.deviceList = [ ];
+		presentationUrls = { };
 		searchForDevices(onDeviceFound);
 	};
     
