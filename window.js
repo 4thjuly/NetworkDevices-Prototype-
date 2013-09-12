@@ -27,7 +27,7 @@ function ListController($scope) {
 	function searchForDevices(onDeviceFound) {
         //ssdpSearch(onDeviceFound);
         //wsdSearch(onDeviceFound);
-        mdnsSearch();
+        mdnsSearch(onDeviceFound);
 	}
 	
     function onDeviceFound(foundDevice) {

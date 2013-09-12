@@ -254,7 +254,7 @@ DNSMessage.prototype.port() = function() {
 	});
 }
 
-DNSMessage.prototype.path() = Function() {
+DNSMessage.prototype.path() = function() {
 	// Path should be in a text value
 	this.additionalRecords.forEach(function (record) {
 		if (record.txtValues['path']) { return record.txtValues['path']; };
