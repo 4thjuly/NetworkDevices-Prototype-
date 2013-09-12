@@ -227,7 +227,8 @@ DNSMessage.prototype.serializeQuery = function () {
 
 DNSMessage.prototype.friendlyName = function() {
 	// Search the records looking for name, return the first part
-	this.answerRecords.forEach(function (record) {
+	for (var i = 0; i < this.answerRecords.length; i++) {
+		var record = this.answerRecords[i];
 		if (record.dataText) { 
 			var dotpos = record.dataText.indexOf('.');
 			if (dotpos > 0) { 
@@ -242,21 +243,24 @@ DNSMessage.prototype.friendlyName = function() {
 
 DNSMessage.prototype.IP = function() {
 	// IP should be in an A record
-	this.additionalRecords.forEach(function (record) {
+	for (var i = 0; i < this.additionalRecords.length; i++) {
+		var record = this.additionalRecords[i];
 		if (record.IP) { return record.IP; };
 	});
 }
 
 DNSMessage.prototype.port = function() {
 	// Port should be in an SRV record
-	this.additionalRecords.forEach(function (record) {
+	for (var i = 0; i < this.additionalRecords.length; i++) {
+		var record = this.additionalRecords[i];
 		if (record.port) { return record.port; };
 	});
 }
 
 DNSMessage.prototype.path = function() {
 	// Path should be in a text value
-	this.additionalRecords.forEach(function (record) {
+	for (var i = 0; i < this.additionalRecords.length; i++) {
+		var record = this.additionalRecords[i];
 		if (record.txtValues['path']) { return record.txtValues['path']; };
 	});
 }
