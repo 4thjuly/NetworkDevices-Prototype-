@@ -139,7 +139,9 @@ function onSsdpXMLReadyStateChange(e) {
                 device.presentationUrl = "";
             }
             
-            console.log('ssdp: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + //            console.log('ssdpxmlrsc: ...');
+            console.log('ssdp: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+
+//            console.log('ssdpxmlrsc: ...');
 //            console.log(' loc: ' + device.location);     
 //            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
 //            console.log(' purl: ' + device.presentationUrl);   
