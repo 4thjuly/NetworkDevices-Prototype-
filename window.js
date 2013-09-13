@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function ListController($scope) {
     $scope.deviceList = [ ];
+    $scope.hiddenItems = false;
 	var presentationUrls = { }; // To help with de-duping 
 	
     $scope.refresh = function() {
@@ -20,6 +21,7 @@ function ListController($scope) {
 		// Clear the old list, look for new stuff
         $scope.deviceList = [ ];
 		presentationUrls = { };
+        $scope.hiddenItems = false;
 		searchForDevices(onDeviceFound);
 	};
     
@@ -37,10 +39,10 @@ function ListController($scope) {
 			
 			// Hide things without presentation urls (might make this a setting)
             // TODO: Do this via setting and filter in the Ux rather than the model
-//			if (!foundDevice.presentationUrl) { 
-//				console.log('odf: Ignoring hidden device: ' + foundDevice.friendlyName);
-//				return; 
-//			}
+			if (!foundDevice.presentationUrl) { 
+				console.log('odf: Hidden device: ' + foundDevice.friendlyName);
+				$scope.hiddenItems = true;
+			}
 				
 			// Skip devices with the same presentation url (merge the details)
 			var prevDevice = presentationUrls[foundDevice.presentationUrl]; 

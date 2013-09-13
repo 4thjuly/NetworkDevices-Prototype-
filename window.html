@@ -24,21 +24,19 @@
       <nav>
         <h4 id='appTitle'>Network Devices</h2>
 		<div id='controlsGroup'>
-          <button id='showHiddenBtn' type="button" class="btn" data-ng-click="showHidden()" accessKey="h" data-toggle="button">SHOW HIDDEN</button>
+          <button id='showHiddenBtn' type="button" class="btn" data-ng-click="showHidden()" accessKey="h" data-toggle="button" data-ng-show='{{hiddenItems}}'>SHOW HIDDEN</button>
           <button id='refreshBtn' type="button" class="btn btn-default" data-ng-click="refresh()" accessKey="r">REFRESH</button>
       	</div>
 	  </nav>
     
       <ul>
         <li data-ng-repeat="device in deviceList">
-			<div data-ng-switch="device.presentationUrl">
-			  <div id="friendlyName" data-ng-switch-when="">{{device.friendlyName}}</div>
-			  <div data-ng-switch-default>
+<!--			<div>-->
+<!--			  <div id="friendlyName">{{device.friendlyName}}</div>-->
+			  <div>
                 <span id="friendlyName">{{device.friendlyName}}</span>
-                <a id="settingsLink" href="{{device.presentationUrl}}" target="_blank" rel="tooltip" title="{{device.presentationUrl}}">Settings</a>
+                <a id="settingsLink" data-ng-show='{{devide.presentationUrl}}' href="{{device.presentationUrl}}" target="_blank" rel="tooltip" title="{{device.presentationUrl}}">Settings</a>
               </div>
-<!--			  <div id="friendlyName" data-ng-switch-default href="{{device.presentationUrl}}" target="_blank" rel="tooltip" title="{{device.presentationUrl}}">{{device.friendlyName}}</a>-->
-			</div>
 			<div>
               <span id="details">{{device.model}} ({{device.manufacturer}})</span>
 			  <span id="ip">{{device.ip}}</span>
