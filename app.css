@@ -30,10 +30,6 @@ body {
     font-weight: bold;
 }
 
-#showHiddenCheck {
-    font-size: 10px;
-}
-
 #controlsGroup {
     float: right;
     margin-top: 5px;
@@ -49,7 +45,7 @@ li {
     border-radius: 1px;
     padding: 5px;
     margin-bottom: 1px;
-    background: #F0F0F0;
+    background: white;
     color: Black;
 }
 
