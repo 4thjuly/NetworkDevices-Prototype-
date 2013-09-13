@@ -10,8 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
 function ListController($scope) {
     $scope.deviceList = [ ];
     $scope.hiddenItems = false;
+    $scope.showHidden = false;
 	var presentationUrls = { }; // To help with de-duping 
 	
+    $scope.showHidden = function() {
+        $scope.showHidden = !$scope.showHidden;
+    }
+    
     $scope.refresh = function() {
         console.log("Refresh");
 		// Disable refresh button for a second to make it obvious something is happening

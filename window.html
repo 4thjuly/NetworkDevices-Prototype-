@@ -22,7 +22,7 @@
     <section id="main">
         
       <nav>
-        <h4 id='appTitle'>Network Devices</h2>
+        <h4 id='appTitle'>Network Devices</h4>
 		<div id='controlsGroup'>
           <button id='showHiddenBtn' type="button" class="btn" data-ng-click="showHidden()" accessKey="h" data-toggle="button" data-ng-show='{{hiddenItems}}'>SHOW HIDDEN</button>
           <button id='refreshBtn' type="button" class="btn btn-default" data-ng-click="refresh()" accessKey="r">REFRESH</button>
@@ -30,7 +30,7 @@
 	  </nav>
     
       <ul>
-        <li data-ng-repeat="device in deviceList">
+        <li data-ng-repeat="device in deviceList" data-ng-show='{{device.hasSettings || showHidden}}>
 <!--			<div>-->
 <!--			  <div id="friendlyName">{{device.friendlyName}}</div>-->
 			  <div>
