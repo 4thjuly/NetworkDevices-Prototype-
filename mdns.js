@@ -331,6 +331,5 @@ function mdnsSearch(deviceFoundCallback) {
 //				if (--repeat <= 0) clearInterval(timer);
 //			}, 1000 + (Math.random() * 1000));
         });
-        });
     });
 }
