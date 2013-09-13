@@ -38,7 +38,7 @@ function ssdpSearch(deviceFoundCallback) {
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
 			handleSsdpMulticastMessages(deviceFoundCallback);
 			// Send DISCOVER and recv (unicast) results back
-			chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result) {
+			chrome.socket.sendTo(socketId, null, "239.255.255.250", 1900, function (result) {
 				console.log("ssdpSearch wrote:" + result.bytesWritten);
 				ssdpRecvLoop(socketId, deviceFoundCallback);
 			});
