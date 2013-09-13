@@ -36,6 +36,7 @@ function ListController($scope) {
             var deviceList = $scope.deviceList;
 			
 			// Hide things without presentation urls (might make this a setting)
+            // TODO: Do this via setting and filter in the Ux rather than the model
 //			if (!foundDevice.presentationUrl) { 
 //				console.log('odf: Ignoring hidden device: ' + foundDevice.friendlyName);
 //				return; 
