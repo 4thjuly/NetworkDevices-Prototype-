@@ -67,6 +67,11 @@ a:hover {
 	font-size: 8pt;
 }
 
+#settingsLink {
+	float: right;
+	font-size: 8pt;
+}
+
 .btn {
 	transition: opacity 1s;
     font-size: 10px;
