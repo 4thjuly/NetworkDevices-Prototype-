@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function ListController($scope) {
     $scope.deviceList = [ ];
     $scope.hiddenItems = false;
-    $scope.showHidden = false;
+    $scope.showHidden = true;
 	var presentationUrls = { }; // To help with de-duping 
 	
     $scope.showHidden = function() {
