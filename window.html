@@ -22,8 +22,11 @@
         
       <nav>
         <h2 id='appTitle'>Network Devices</h2>
-        <button id='refreshBtn' class="btn" data-ng-click="refresh()" accessKey="r">REFRESH</button>
-      </nav>
+		<div id='controlsGroup'>
+		  <input id='showHiddenCheck' type="checkbox">Show Hidden</input>
+          <button id='refreshBtn' class="btn" data-ng-click="refresh()" accessKey="r">REFRESH</button>
+      	</div>
+	  </nav>
     
       <ul>
         <li data-ng-repeat="device in deviceList">

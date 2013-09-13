@@ -105,7 +105,7 @@ function wsdRecvLoop(socketId, deviceFoundCallback) {
     console.log("wsdrl("+socketId+"):...");
     chrome.socket.recvFrom(socketId, 65507, function (result) {
         if (result.resultCode >= 0) {
-            console.log("...wsdrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
+//            console.log("...wsdrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);
             var dv = new DataView(result.data);
             var blob = new Blob([dv]);
             var fr = new FileReader();

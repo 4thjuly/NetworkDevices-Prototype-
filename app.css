@@ -26,10 +26,17 @@ body {
 }
 
 #refreshBtn {
-    float: right;
-    margin-top: 5px;
     font-size: 10px;
     font-weight: bold;
+}
+
+#showHiddenCheck {
+    font-size: 10px;
+}
+
+#controlsGroup {
+    float: right;
+    margin-top: 5px;
 }
 
 ul {

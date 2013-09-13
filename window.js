@@ -36,10 +36,10 @@ function ListController($scope) {
             var deviceList = $scope.deviceList;
 			
 			// Hide things without presentation urls (might make this a setting)
-			if (!foundDevice.presentationUrl) { 
-				console.log('odf: Ignoring hidden device: ' + foundDevice.friendlyName);
-				return; 
-			}
+//			if (!foundDevice.presentationUrl) { 
+//				console.log('odf: Ignoring hidden device: ' + foundDevice.friendlyName);
+//				return; 
+//			}
 				
 			// Skip devices with the same presentation url (merge the details)
 			var prevDevice = presentationUrls[foundDevice.presentationUrl]; 
