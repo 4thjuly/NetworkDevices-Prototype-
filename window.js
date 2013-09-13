@@ -36,33 +36,33 @@ function ListController($scope) {
     function onDeviceFound(foundDevice) {
         $scope.$apply(function() {
             var deviceList = $scope.deviceList;
-			
-			// Hide things without presentation urls for settings
-            // TODO: Do this via an option
-			if (!foundDevice.presentationUrl) { 
-				console.log('odf: Hidden device: ' + foundDevice.friendlyName);
-				$scope.hiddenItems = true;
-			} else {
+				
+            if (foundDevice.presentationUrl) {
                 // NB Would prefer condition expressions for this
                 foundDevice.hasSettings = true;
+                // Skip devices with the same presentation url (merge the details)
+                var prevDevice = presentationUrls[foundDevice.presentationUrl]; 
+                if (prevDevice) {
+                    // HACK: Pick the longest friendly name
+                    if (foundDevice.friendlyName.length > prevDevice.friendlyName.length) {
+                        prevDevice.friendlyName = foundDevice.friendlyName;
+                    }
+                    // HACK: Pick more details over less
+                    if (!prevDevice.model) {
+                        prevDevice.model = foundDevice.model;
+                        prevDevice.manufacturer = foundDevice.manufacturer;
+                    }
+                    return;
+                } else {
+                    presentationUrls[foundDevice.presentationUrl] = foundDevice;
+                }
+            } else {
+                // Hide things without presentation urls for settings
+				console.log('odf: Hidden device: ' + foundDevice.friendlyName);
+				$scope.hiddenItems = true;
             }
-				
-			// Skip devices with the same presentation url (merge the details)
-			var prevDevice = presentationUrls[foundDevice.presentationUrl]; 
-			if (prevDevice) {
-				// HACK: Pick the longest friendly name
-				if (foundDevice.friendlyName.length > prevDevice.friendlyName.length) {
-					prevDevice.friendlyName = foundDevice.friendlyName;
-				}
-				// HACK: Pick more details over less
-				if (!prevDevice.model) {
-					prevDevice.model = foundDevice.model;
-					prevDevice.manufacturer = foundDevice.manufacturer;
-				}
-				return;
-			}
 			
-			// NB Assumes the list of devices is small 
+			// Not already in the list, add it, NB Assumes the list of devices is small 
             for (var i = 0; i < deviceList.length; i++) {
                 var device = deviceList[i];
                 if (foundDevice.location == device.location) {
@@ -80,7 +80,6 @@ function ListController($scope) {
 				} else if (foundDevice.friendlyName.localeCompare(device.friendlyName) < 1) {
 					// Insert it here
 					deviceList.splice(i, 0, foundDevice);
-					presentationUrls[foundDevice.presentationUrl] = foundDevice;
 					return;
 				}
             }
