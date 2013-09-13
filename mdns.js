@@ -323,6 +323,14 @@ function mdnsSearch(deviceFoundCallback) {
 				console.log("mdnsSearch wrote:" + result.bytesWritten);
 				mdnsRecvLoop(socketId, deviceFoundCallback);
 			});
+			
+//			var repeat = 3;			
+//			var timer = setInterval(function() {
+//				console.log('mdnsSearch('+repeat+'):...');
+//				chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function() { });
+//				if (--repeat <= 0) clearInterval(timer);
+//			}, 1000 + (Math.random() * 1000));
+        });
         });
     });
 }
