@@ -7,6 +7,7 @@ function Device(location, ip, endpointReference, manufacturer, model, friendlyNa
     this.ip = ip;
     this.presentationUrl = presentationUrl; // Settings or info page
     this.endpointReference = endpointReference; // Reference to the metadata
+    this.hasSettings = false;
 }
 
 function getXmlDataForTag(xml, tagName) {
