@@ -287,12 +287,12 @@ var g_mdnsSearchSocket;
 function mdnsRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
-            console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
+//            console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
 			// HACK - Using a manufacturer as 'HTTP' just to make things look pretty. 
 			// TODO - For common device types (like printer) query for the txt records that have all the info
 			var friendlyName = dnsm.friendlyName();
-			console.log('  mdnsrl:' + friendlyName); 
+			console.log('mdnsrl:' + friendlyName); 
 			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.ip(), null, 'HTTP', null, friendlyName, dnsm.presentationUrl());
 			deviceFoundCallback(device);
             mdnsRecvLoop(socketId, deviceFoundCallback);
@@ -324,12 +324,12 @@ function mdnsSearch(deviceFoundCallback) {
 				mdnsRecvLoop(socketId, deviceFoundCallback);
 			});
 			
-//			var repeat = 3;			
-//			var timer = setInterval(function() {
-//				console.log('mdnsSearch('+repeat+'):...');
-//				chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function() { });
-//				if (--repeat <= 0) clearInterval(timer);
-//			}, 1000 + (Math.random() * 1000));
+			var repeat = 3;			
+			var timer = setInterval(function() {
+				console.log('mdnsSearch('+repeat+'):...');
+				chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function() { });
+				if (--repeat <= 0) clearInterval(timer);
+			}, 1000 + (Math.random() * 1000));
         });
     });
 }

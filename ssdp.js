@@ -36,9 +36,9 @@ function ssdpSearch(deviceFoundCallback) {
         g_ssdpSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-//			handleSsdpMulticastMessages(deviceFoundCallback);
+			handleSsdpMulticastMessages(deviceFoundCallback);
 			// Send DISCOVER and recv (unicast) results back
-			chrome.socket.sendTo(socketId, new ArrayBuffer(), "239.255.255.250", 1900, function (result) {
+			chrome.socket.sendTo(socketId, buf, "239.255.255.250", 1900, function (result) {
 				console.log("ssdpSearch wrote:" + result.bytesWritten);
 				ssdpRecvLoop(socketId, deviceFoundCallback);
 			});
@@ -139,9 +139,9 @@ function onSsdpXMLReadyStateChange(e) {
                 device.presentationUrl = "";
             }
             
-            console.log('dxmlrsc: ...');
+            console.log('ssdp: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + //            console.log('ssdpxmlrsc: ...');
 //            console.log(' loc: ' + device.location);     
-            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
 //            console.log(' purl: ' + device.presentationUrl);   
             
             this.callback(device);

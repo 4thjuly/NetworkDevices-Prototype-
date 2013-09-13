@@ -74,17 +74,17 @@ function wsdSearch(deviceFoundCallback) {
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
 			handleWsdHelloMessages(deviceFoundCallback);
-            chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result){
+            chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function (result) {
                 console.log("wsdSearch wrote:" + + result.bytesWritten);				
                 wsdRecvLoop(socketId, deviceFoundCallback);
             });
 			// UDP is unreliable so repeat the multicast a few times
-//			var repeat = 3;			
-//			var timer = setInterval(function() {
-//				console.log('wsdSearch('+repeat+'):...');
-//				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function() { });
-//				if (--repeat <= 0) clearInterval(timer);
-//			}, 1000 + (Math.random() * 1000));
+			var repeat = 3;			
+			var timer = setInterval(function() {
+				console.log('wsdSearch('+repeat+'):...');
+				chrome.socket.sendTo(socketId, buf, "239.255.255.250", 3702, function() { });
+				if (--repeat <= 0) clearInterval(timer);
+			}, 1000 + (Math.random() * 1000));
         });
     });
 }
@@ -176,9 +176,11 @@ function onWsdXMLReadyStateChange(e) {
 				device.presentationUrl = '';
 			}
             
-            console.log('wstgrsc: ...');
+            console.log('wsd: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+
+//            console.log('wstgrsc: ...');
 //            console.log(' loc: ' + device.location);     
-            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
+//            console.log(' info: ' + device.friendlyName + " (" + device.manufacturer + " " + device.model + ") [" + device.ip + "]");
 //            console.log(' purl: ' + device.presentationUrl);  
            
             this.callback(device);
