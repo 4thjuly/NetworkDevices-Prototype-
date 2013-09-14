@@ -79,3 +79,7 @@ a:hover {
     font-size: 10px;
     font-weight: bold;
 }
+
+#showHiddenCheck {
+    margin-right: 5px;
+}
