@@ -9,29 +9,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function ListController($scope) {
     $scope.deviceList = [ ];
-    $scope.hiddenItems = false;
-    $scope.showHidden = true;
-	var presentationUrls = { }; // To help with de-duping 
+    $scope.hasHiddenItems = false;
+    $scope.showHidden = false;
+    var presentationUrls = { }; // To help with de-duping 
 	
-    $scope.showHidden = function() {
+    $scope.onToggleHidden = function() {
         $scope.showHidden = !$scope.showHidden;
     }
     
-    $scope.refresh = function() {
+    $scope.onRefresh = function() {
         console.log("Refresh");
-		// Disable refresh button for a second to make it obvious something is happening
-		var refreshBtn = document.getElementById('refreshBtn');
-		refreshBtn.disabled = true;
-		setTimeout(function(){refreshBtn.disabled = false; }, 1000);
-		// Clear the old list, look for new stuff
+        // Disable refresh button for a second to make it obvious something is happening
+        var refreshBtn = document.getElementById('refreshBtn');
+        refreshBtn.disabled = true;
+        setTimeout(function(){refreshBtn.disabled = false; }, 1000);
+        // Clear the old list, look for new stuff
         $scope.deviceList = [ ];
-		presentationUrls = { };
-        $scope.hiddenItems = false;
-		searchForDevices(onDeviceFound);
+        presentationUrls = { };
+        $scope.hasHiddenItems = false;
+        searchForDevices(onDeviceFound);
 	};
     
-	// Specifically, seach for anything that has a 'friendly name', ideally a web page we can nav to
-	// This, for example, will skip lots of misc mdns services
+    // Specifically, seach for anything that has a 'friendly name', ideally a web page we can nav to
+    // This, for example, will skip lots of misc mdns services
 	function searchForDevices(onDeviceFound) {
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
@@ -64,7 +64,7 @@ function ListController($scope) {
             } else {
                 // Hide things without presentation urls for settings
 				console.log('odf: Hidden device: ' + foundDevice.friendlyName);
-				$scope.hiddenItems = true;
+				$scope.hasHiddenItems = true;
             }
 			
 			// Not already in the list, add it, NB Assumes the list of devices is small 
@@ -94,7 +94,7 @@ function ListController($scope) {
         });
     }  
 	
-	$scope.refresh();
+	$scope.onRefresh();
  
 }
 
