@@ -36,60 +36,66 @@ function ListController($scope) {
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
         mdnsSearch(onDeviceFound);
-	}
-	
+    }
+
+    function isDupDevice(device1, device2) { 
+        if (device1.location == device2.location) {
+            // Already in the list, ignore it
+            return true;
+        } else if ((device1.friendlyName == device2.friendlyName) && (device1.ip == device2.ip) && (device1.presentationUrl == device2.presentationUrl)) {
+            // Even if locations differ, if everything else is the same may as way skip it
+            return true;
+        }
+        return false;
+    }
+    
+    // Merge device2 into device1
+    function mergeDevices(device1, device2) {
+        // HACK: Pick the longest friendly name, assumption being its more descriptive
+        if (device2.friendlyName.length > device1.friendlyName.length) {
+            device1.friendlyName = device2.friendlyName;
+        }
+        // HACK: Pick more details over less. 
+        // Specifically http devices found first by mdns and then later by ssdp or wsd 
+        // wont have model
+        if (!device1.model) {
+            device1.model = device2.model;
+            device1.manufacturer = device2.manufacturer;
+        }
+    }
+                    
     function onDeviceFound(foundDevice) {
         $scope.$apply(function() {
             var deviceList = $scope.deviceList;
 				
             if (foundDevice.presentationUrl) {
-                // NB Would prefer condition expressions for this
                 foundDevice.hasSettings = true;
-                // Skip devices with the same presentation url (merge the details)
+                // Merge devices with the same presentation url
                 var prevDevice = presentationUrls[foundDevice.presentationUrl]; 
                 if (prevDevice) {
-                    // HACK: Pick the longest friendly name
-                    if (foundDevice.friendlyName.length > prevDevice.friendlyName.length) {
-                        prevDevice.friendlyName = foundDevice.friendlyName;
-                    }
-                    // HACK: Pick more details over less
-                    if (!prevDevice.model) {
-                        prevDevice.model = foundDevice.model;
-                        prevDevice.manufacturer = foundDevice.manufacturer;
-                    }
-                    return;
-                } else {
-                    presentationUrls[foundDevice.presentationUrl] = foundDevice;
-                }
+                    mergeDevices(foundDevice, prevDevice);
+                    // Remove the old device, add the new one (below)
+                    deviceList.splice(deviceList.indexOf(prevDevice), 1);
+                } 
             } else {
                 // Hide things without presentation urls for settings
 				console.log('odf: Hidden device: ' + foundDevice.friendlyName);
 				$scope.hasHiddenItems = true;
             }
 			
-			// Not already in the list, add it, NB Assumes the list of devices is small 
+			// Add device to the list, NB Assumes the list of devices is small 
             for (var i = 0; i < deviceList.length; i++) {
                 var device = deviceList[i];
-                if (foundDevice.location == device.location) {
-                    // Already in the list, ignore it
+                if (isDupDevice(device, foundDevice)) {
 					console.log('odf: Ignoring dup: ' + foundDevice.friendlyName);
-                    return;
-                } else if ((foundDevice.friendlyName == device.friendlyName) && (foundDevice.ip == device.ip)) {
-					if (foundDevice.presentationUrl == device.presentationUrl) {
-						// Even if locations differ, if everything else is the same may as way skip it
-						console.log('odf: Ignoring dup: ' + foundDevice.friendlyName);
-						return;
-					}
-					// TODO: Someway to de-dup different presentation urls for the same friendly name and ip? 
-					// Maybe just ignore?
+                    return;                
 				} else if (foundDevice.friendlyName.localeCompare(device.friendlyName) < 1) {
 					// Insert it here
-					deviceList.splice(i, 0, foundDevice);
-					return;
-				}
+                    break;
+                }
             }
-            // Append it on the end
-            deviceList.push(foundDevice);
+            // Add it to the list
+            deviceList.splice(i, 0, foundDevice);
 			presentationUrls[foundDevice.presentationUrl] = foundDevice;
         });
     }  
