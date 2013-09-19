@@ -2,10 +2,10 @@
 
 // NB COMPAT Bank last line is key to most devices
 var SSDP_DISCOVER = [
-     'M-SEARCH * HTTP/1.1 ',
+     'M-SEARCH * HTTP/1.1',
      'HOST: 239.255.255.250:1900',
      'MAN: "ssdp:discover"',
-     'MX:3',
+     'MX: 1',
      'ST: ssdp:all', 
      '\r\n'
     ].join('\r\n');
