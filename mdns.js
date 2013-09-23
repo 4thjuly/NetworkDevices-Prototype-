@@ -38,7 +38,7 @@ function DNSResourceRecord() {
 	this.port = undefined;
 }
 
-function ArrayStream(array, initialOffset) {
+function DNSStream(array, initialOffset) {
 	this.array = array;
 	this.pos = initialOffset || 0;
 }
@@ -52,12 +52,12 @@ function createDNSQueryMessage(name) {
 	return dnsm;
 }
 
-ArrayStream.prototype.labelsToName = function (len) {
+DNSStream.prototype.labelsToName = function (len) {
   	return this.getLabels(len).join('.');
 }
 
 // Parse out labels (byte counted strings with compression)
-ArrayStream.prototype.getLabels = function (len) {
+DNSStream.prototype.getLabels = function (len) {
 	var array = this.array;
 	var offset = this.pos;
 	var labels = [];
@@ -72,8 +72,8 @@ ArrayStream.prototype.getLabels = function (len) {
 		} else if (labelLen >= 0xc0) {
 			// Handle label compression, follow the ptr then stop
 			var ptr = ((labelLen & 0x3f) << 8) + array[offset++];
-			var tempAS = new ArrayStream(array, ptr);
-			label = tempAS.labelsToName();
+			var tempDS = new DNSStream(array, ptr);
+			label = tempDS.labelsToName();
     		labels.push(label);
 			break;
 		} else {
@@ -88,7 +88,7 @@ ArrayStream.prototype.getLabels = function (len) {
   	return labels;
 };
 
-ArrayStream.prototype.txtRecordToValues = function (len) {
+DNSStream.prototype.txtRecordToValues = function (len) {
 	var values = { };
 	var labels = this.getLabels(len);
 	labels.forEach(function(label) {
@@ -98,7 +98,7 @@ ArrayStream.prototype.txtRecordToValues = function (len) {
   	return values;
 };
 
-ArrayStream.prototype.getDNSQuestionEntries = function (count) {
+DNSStream.prototype.getDNSQuestionEntries = function (count) {
 	var questionEntries = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsqe = new DNSQuestionEntry();
@@ -111,7 +111,7 @@ ArrayStream.prototype.getDNSQuestionEntries = function (count) {
 	return questionEntries;
 }
 
-ArrayStream.prototype.bytesToIPv4 = function () {
+DNSStream.prototype.bytesToIPv4 = function () {
 	var arr = this.array;
 	var pos = this.pos;
 	var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
@@ -119,7 +119,7 @@ ArrayStream.prototype.bytesToIPv4 = function () {
 	return ip;
 }
 
-ArrayStream.prototype.getDNSResourceRecords = function (count) {
+DNSStream.prototype.getDNSResourceRecords = function (count) {
 	var resourceRecords = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsrr = new DNSResourceRecord();
@@ -166,11 +166,11 @@ function createDNSMessage(arrayBuffer) {
     var dnsm = new DNSMessage();
 	if (arrayBuffer) {
 		var view = new Uint8Array(arrayBuffer);
-		var as = new ArrayStream(view, DNS_QUESTION_RESOURCE_OFFSET);
-		dnsm.questionEntries = as.getDNSQuestionEntries(arrayToUint16(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.answerRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.authorityRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.additionalRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
+		var ds = new DNSStream(view, DNS_QUESTION_RESOURCE_OFFSET);
+		dnsm.questionEntries = ds.getDNSQuestionEntries(arrayToUint16(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.answerRecords = ds.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.authorityRecords = ds.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.additionalRecords = ds.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
 	}
 	
 	return dnsm;
