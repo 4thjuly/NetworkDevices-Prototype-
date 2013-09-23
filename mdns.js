@@ -130,9 +130,9 @@ ArrayStream.prototype.getDNSResourceRecords = function (count) {
 		this.pos += 8;	
 		// get the data			
 		var dataLen = arrayToUint16(this.array, this.pos);
-		arrayStream.pos += 2;
+		this.pos += 2;
 		var dataPos = this.pos; 
-		// NB Can just create a temp arraystream since compression ptrs can point anywhere, not just in the data
+		// NB Can't just create a temp arraystream since compression ptrs can point anywhere, not just in the data
 		dnsrr.data = this.array.subarray(this.pos, this.pos + dataLen);
 		// var dataAS = new ArrayStream(dnsrr.data);
 		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR) {
@@ -167,10 +167,10 @@ function createDNSMessage(arrayBuffer) {
 	if (arrayBuffer) {
 		var view = new Uint8Array(arrayBuffer);
 		var as = new ArrayStream(view, DNS_QUESTION_RESOURCE_OFFSET);
-		dnsm.questionEntries = getDNSQuestionEntries(as, arrayToUint16(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.answerRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.authorityRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
-		dnsm.additionalRecords = getDNSResourceRecords(as, arrayToUint16(view, DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.questionEntries = as.getDNSQuestionEntries(arrayToUint16(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.answerRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.authorityRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET));
+		dnsm.additionalRecords = as.getDNSResourceRecords(arrayToUint16(view, DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET));
 	}
 	
 	return dnsm;
