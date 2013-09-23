@@ -16,8 +16,6 @@ var MDNS_MAX_PACKET_SIZE = 9000;
 		
 // ---------------------------------------------------------------------------
 function DNSMessage() {
-//	this.transactionId = 0;
-//	this.flags = 0;
 	this.questionEntries = [];
 	this.answerRecords = [];
 	this.authorityRecords = [];
@@ -33,8 +31,6 @@ function DNSQuestionEntry() {
 function DNSResourceRecord() {
 	this.name = undefined;
 	this.type = 0;
-//	this.clss = 1;
-//	this.ttl = 0;
 	this.data = undefined;
 	this.dataText = undefined;
 	this.txtValues = { };
@@ -52,22 +48,18 @@ function createDNSQueryMessage(name) {
 	var dnsm = new DNSMessage();
 	var dnsqe = new DNSQuestionEntry();
 	dnsqe.name = name;
-//	dnsqe.type = DNS_QUESTION_TYPE_PTR;
-//	dnsqe.clss = DNS_QUESTION_CLASS_IN;
 	dnsm.questionEntries.push(dnsqe);
 	return dnsm;
 }
 
-// TOOD: OOPify all the ArrayStream stuff.
-
-function labelsToName(arrayStream, len) {
-  	return getLabels(arrayStream, len).join('.');
+ArrayStream.prototype.labelsToName = function (len) {
+  	return this.getLabels(len).join('.');
 }
 
 // Parse out labels (byte counted strings with compression)
-function getLabels(arrayStream, len) {
-	var array = arrayStream.array;
-	var offset = arrayStream.pos;
+ArrayStream.prototype.getLabels = function (len) {
+	var array = this.array;
+	var offset = this.pos;
 	var labels = [];
 	var labelLen;
 	var dataEnd = len ? offset + len : array.length;
@@ -81,7 +73,7 @@ function getLabels(arrayStream, len) {
 			// Handle label compression, follow the ptr then stop
 			var ptr = ((labelLen & 0x3f) << 8) + array[offset++];
 			var tempAS = new ArrayStream(array, ptr);
-			label = labelsToName(tempAS);
+			label = tempAS.labelsToName();
     		labels.push(label);
 			break;
 		} else {
@@ -92,13 +84,13 @@ function getLabels(arrayStream, len) {
     		labels.push(label);
 		}
   	}
-	arrayStream.pos = offset;
+	this.pos = offset;
   	return labels;
 };
 
-function txtRecordToValues(arrayStream, len) {
+ArrayStream.prototype.txtRecordToValues = function (len) {
 	var values = { };
-	var labels = getLabels(arrayStream, len);
+	var labels = this.getLabels(len);
 	labels.forEach(function(label) {
 		var nameValue = label.split('=');
 		if (nameValue.length == 2) values[nameValue[0]] = nameValue[1];			
@@ -106,57 +98,57 @@ function txtRecordToValues(arrayStream, len) {
   	return values;
 };
 
-function getDNSQuestionEntries(arrayStream, count) {
+ArrayStream.prototype.getDNSQuestionEntries = function (count) {
 	var questionEntries = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsqe = new DNSQuestionEntry();
-		var name = labelsToName(arrayStream);
+		var name = this.labelsToName();
 		dnsqe.name = name;
-		arrayStream.pos += 4; // skip the type and class
+		this.pos += 4; // skip the type and class
 		questionEntries.push(dnsqe);
 //		console.log('  gdnsqe: ' + name);
 	}
 	return questionEntries;
 }
 
-function bytesToIPv4(arrayStream) {
-	var arr = arrayStream.array;
-	var pos = arrayStream.pos;
+ArrayStream.prototype.bytesToIPv4 = function () {
+	var arr = this.array;
+	var pos = this.pos;
 	var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
-	arrayStream.pos += 4;
+	this.pos += 4;
 	return ip;
 }
 
-function getDNSResourceRecords(arrayStream, count) {
+ArrayStream.prototype.getDNSResourceRecords = function (count) {
 	var resourceRecords = [];	
 	for (var i = 0; i < count; i++) {
 		var dnsrr = new DNSResourceRecord();
-		dnsrr.name = labelsToName(arrayStream);
+		dnsrr.name = this.labelsToName();
 //		console.log('  gdnsrr.name('+i+'): ' + dnsrr.name);
-		dnsrr.type = arrayToUint16(arrayStream.array, arrayStream.pos);
+		dnsrr.type = arrayToUint16(this.array, this.pos);
 		// skip the type, class & ttl	
-		arrayStream.pos += 8;	
+		this.pos += 8;	
 		// get the data			
-		var dataLen = arrayToUint16(arrayStream.array, arrayStream.pos);
+		var dataLen = arrayToUint16(this.array, this.pos);
 		arrayStream.pos += 2;
-		var dataPos = arrayStream.pos; 
+		var dataPos = this.pos; 
 		// NB Can just create a temp arraystream since compression ptrs can point anywhere, not just in the data
-		dnsrr.data = arrayStream.array.subarray(arrayStream.pos, arrayStream.pos + dataLen);
+		dnsrr.data = this.array.subarray(this.pos, this.pos + dataLen);
 		// var dataAS = new ArrayStream(dnsrr.data);
 		if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_PTR) {
-		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
+		    dnsrr.dataText = this.labelsToName(dataLen);
 //			console.log('  gdnsrr.data: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_SRV) {
-			arrayStream.pos += 4; // skip priority, weight
-			dnsrr.port = arrayToUint16(arrayStream.array, arrayStream.pos); 
-			arrayStream.pos += 2; // port
-		    dnsrr.dataText = labelsToName(arrayStream, dataLen);
+			this.pos += 4; // skip priority, weight
+			dnsrr.port = arrayToUint16(this.array, this.pos); 
+			this.pos += 2; // port
+		    dnsrr.dataText = this.labelsToName(dataLen);
 //			console.log('  gdnsrr.srv: ' + dnsrr.dataText);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_A) {
-			dnsrr.ip = bytesToIPv4(arrayStream); 
+			dnsrr.ip = this.bytesToIPv4(); 
 //			console.log('  gdnsrr.ip: ' + dnsrr.ip);
 		} else if (dnsrr.type == DNS_RESOURCE_RECORD_TYPE_TXT) {
-			dnsrr.txtValues = txtRecordToValues(arrayStream, dataLen);
+			dnsrr.txtValues = this.txtRecordToValues(dataLen);
 //			console.log('  gdnsrr.txtValue: ' + Object.keys(dnsrr.txtValues).length);
 		} else {
 			// Just skip the data for any other record types else
@@ -164,7 +156,7 @@ function getDNSResourceRecords(arrayStream, count) {
 			console.log('gdnsrr: Skipped record type: ' + dnsrr.type);
 		}
 		resourceRecords.push(dnsrr);
-		arrayStream.pos = dataPos + dataLen;
+		this.pos = dataPos + dataLen;
 	}
 	return resourceRecords;
 }
