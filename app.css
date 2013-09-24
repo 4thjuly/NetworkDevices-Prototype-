@@ -15,8 +15,19 @@ body {
 	background-color: #F0F0F0;
 }
 
+#main {
+    position: absolute;
+    top: 0px; 
+    left: 0px; 
+    bottom: 0px; 
+    right: 0px;
+    display: flex;
+    flex-flow: column;
+}
+
 #main > nav {
-    margin-bottom: 10px;
+    flex: 0 0 auto;
+    padding: 5px 10px 5px 10px;
 }
 
 #appTitle {
@@ -31,6 +42,8 @@ body {
 }
 
 ul {
+    flex: 1 1 auto;
+    overflow: auto;
     margin: 0;
     padding: 0;
     height: auto;
