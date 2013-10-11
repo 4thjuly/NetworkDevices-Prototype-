@@ -1,4 +1,5 @@
-// Handle all mdns related network stuff
+// Handle all NBT related network stuff
+// TODO - De-dup with msdns stuff
 
 // ---------------------------------------------------------------------------
 var DNS_RESOURCE_RECORD_TYPE_A = 1;
@@ -13,9 +14,12 @@ var DNS_HEADER_AUTHORITY_RESOURCE_RECORD_COUNT_OFFSET = 8;
 var DNS_HEADER_ADDITIONAL_RESOURCE_RECORD_COUNT_OFFSET = 10;
 var DNS_QUESTION_RESOURCE_OFFSET = 12;
 var MDNS_MAX_PACKET_SIZE = 9000;
+var NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED = 0x0110;
+var NBT_WILDCARD_NAME = 'CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 		
 // ---------------------------------------------------------------------------
 function DNSMessage() {
+    this.flags = 0;
 	this.questionEntries = [];
 	this.answerRecords = [];
 	this.authorityRecords = [];
@@ -192,8 +196,9 @@ DNSMessage.prototype.serializeQuery = function () {
 	var view = new Uint8Array(buf);
 	var qe = this.questionEntries[0];
     
-    // Header stuff (skipping flags)
-	uint16ToArray(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET, 1);
+    // Header stuff
+	uint16ToArray(view, DNS_HEADER_FLAGS_OFFSET, this.flags);
+    uint16ToArray(view, DNS_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET, 1);
 				  
     // Question entry name, removing the dots
     var offset = DNS_QUESTION_RESOURCE_OFFSET;
@@ -274,54 +279,59 @@ DNSMessage.prototype.presentationUrl = function() {
 	}
 }
 
-var g_mdnsSearchSocket;	
+// ---------------------------------------------------------------------------
+var g_nbtSearchSocket;	
 	
-function mdnsRecvLoop(socketId, deviceFoundCallback) {
+function nbtRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
-//            console.log("...mdnsrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
+            console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
-			// HACK - Using a manufacturer as 'HTTP' just to make things look pretty. 
-			// TODO - For common device types (like printer) query for the txt records that have all the info
 			var friendlyName = dnsm.friendlyName();
-			console.log('mdnsrl:' + friendlyName); 
-			var device = new Device(dnsm.answerRecords[0].dataText, dnsm.ip(), null, 'HTTP', null, friendlyName, dnsm.presentationUrl());
-			deviceFoundCallback(device);
-            mdnsRecvLoop(socketId, deviceFoundCallback);
+			console.log('nbtrl:' + friendlyName); 
+            nbtRecvLoop(socketId, deviceFoundCallback);
         } else {
-            // TODO: Handle error -4?
-            console.log("  mdnsrl: Error: " + result.resultCode);
+            console.log("  nbtrl: Error: " + result.resultCode);
         }
     });   
 }
 	
-// Look for something with a web page (http)
-function mdnsSearch(deviceFoundCallback) {
-//	var dnsq = createDNSQueryMessage('_services._dns-sd._udp.local');
-//	var dnsq = createDNSQueryMessage('_printer._tcp.local');
-	var dnsq = createDNSQueryMessage('_http._tcp.local');
+// Look for PCs
+function nbtSearch(deviceFoundCallback) {
+    var nbtFlags = NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED; 
+	var dnsq = createDNSQueryMessage(NBT_WILDCARD_NAME);
 	var buf = dnsq.serializeQuery();
 		
-    if (g_mdnsSearchSocket) {
-        chrome.socket.destroy(g_mdnsSearchSocket.socketId);
-        g_mdnsSearchSocket = null;
+    if (g_nbtSearchSocket) {
+        chrome.socket.destroy(g_nbtSearchSocket.socketId);
+        g_nbtSearchSocket = null;
     }
     
     chrome.socket.create("udp", function (socket) {
-        g_mdnsSearchSocket = socket;
+        g_nbtSearchSocket = socket;
         var socketId = socket.socketId;
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-			chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function (result) {
-				console.log("mdnsSearch wrote:" + result.bytesWritten);
-				mdnsRecvLoop(socketId, deviceFoundCallback);
+            // TODO - Fix, get errorcode -10 on broadcast address
+          
+/*          
+            chrome.socket.getNetworkList( function (network) {
+              console.log('network: ' + network.name + ', ' + network.address);
+            });
+*/          
+			chrome.socket.sendTo(socketId, buf, "255.255.255.255", 137, function (result) {
+                if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
+                else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
+				nbtRecvLoop(socketId, deviceFoundCallback);
 			});
-			
+
+/*
 			var repeat = 3;			
 			var timer = setInterval(function() {
 				console.log('mdnsSearch('+repeat+'):...');
 				chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function() { });
 				if (--repeat <= 0) clearInterval(timer);
 			}, 1000 + (Math.random() * 1000));
+*/
         });
     });
 }
