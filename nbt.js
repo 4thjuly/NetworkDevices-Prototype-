@@ -16,6 +16,7 @@ var DNS_QUESTION_RESOURCE_OFFSET = 12;
 var MDNS_MAX_PACKET_SIZE = 9000;
 var NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED = 0x0110;
 var NBT_WILDCARD_NAME = 'CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+var NBT_QUESTION_TYPE_NB = 0x20;
 		
 // ---------------------------------------------------------------------------
 function DNSMessage() {
@@ -48,14 +49,6 @@ function DNSStream(array, initialOffset) {
 }
 
 // ---------------------------------------------------------------------------
-function createDNSQueryMessage(name) {
-	var dnsm = new DNSMessage();
-	var dnsqe = new DNSQuestionEntry();
-	dnsqe.name = name;
-	dnsm.questionEntries.push(dnsqe);
-	return dnsm;
-}
-
 DNSStream.prototype.labelsToName = function (len) {
   	return this.getLabels(len).join('.');
 }
@@ -282,6 +275,15 @@ DNSMessage.prototype.presentationUrl = function() {
 // ---------------------------------------------------------------------------
 var g_nbtSearchSocket;	
 	
+function createNBTQueryRequest(name) {
+	var dnsm = new DNSMessage();
+	var dnsqe = new DNSQuestionEntry();
+	dnsqe.name = name;
+    dnsqe.type = NBT_QUESTION_TYPE_NB;
+	dnsm.questionEntries.push(dnsqe);
+	return dnsm;
+}
+
 function nbtRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
@@ -299,7 +301,7 @@ function nbtRecvLoop(socketId, deviceFoundCallback) {
 // Look for PCs
 function nbtSearch(deviceFoundCallback) {
     var nbtFlags = NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED; 
-	var dnsq = createDNSQueryMessage(NBT_WILDCARD_NAME);
+	var dnsq = createNBTQueryRequest(NBT_WILDCARD_NAME);
 	var buf = dnsq.serializeQuery();
 		
     if (g_nbtSearchSocket) {
