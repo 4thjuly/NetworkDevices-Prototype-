@@ -208,7 +208,7 @@ DNSMessage.prototype.serializeQuery = function () {
 	uint16ToArray(view, offset+3, qe.clss);
 	
 	// trim
-    buf = buf.slice(0, offset+4); 
+    buf = buf.slice(0, offset+5); 
                     
 	return buf;
 }
