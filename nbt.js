@@ -207,8 +207,9 @@ DNSMessage.prototype.serializeQuery = function () {
 	uint16ToArray(view, offset+1, qe.type);
 	uint16ToArray(view, offset+3, qe.clss);
 	
-	// Everything else can remain zero
-	
+	// trim
+    buf = buf.slice(0, offset+4); 
+                    
 	return buf;
 }
 
@@ -321,7 +322,7 @@ function nbtSearch(deviceFoundCallback) {
               console.log('network: ' + network.name + ', ' + network.address);
             });
 */          
-			chrome.socket.sendTo(socketId, buf, "255.255.255.255", 137, function (result) {
+			chrome.socket.sendTo(socketId, buf, "192.168.0.255", 137, function (result) {
                 if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
                 else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
 				nbtRecvLoop(socketId, deviceFoundCallback);
