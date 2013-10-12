@@ -278,6 +278,7 @@ var g_nbtSearchSocket;
 function createNBTQueryRequest(name) {
 	var dnsm = new DNSMessage();
 	var dnsqe = new DNSQuestionEntry();
+    dnsm.flags = NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED;
 	dnsqe.name = name;
     dnsqe.type = NBT_QUESTION_TYPE_NB;
 	dnsm.questionEntries.push(dnsqe);
