@@ -16,6 +16,8 @@ var DNS_QUESTION_RESOURCE_OFFSET = 12;
 var MDNS_MAX_PACKET_SIZE = 9000;
 var NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED = 0x0110;
 var NBT_WILDCARD_NAME = 'CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+var NBT_MSBROWSE_NAME = 'ABACFPFPENFDECFCEPFHFDEFFPFPACAB';
+ 
 var NBT_QUESTION_TYPE_NB = 0x20;
 		
 // ---------------------------------------------------------------------------
@@ -303,7 +305,7 @@ function nbtRecvLoop(socketId, deviceFoundCallback) {
 // Look for PCs
 function nbtSearch(deviceFoundCallback) {
     var nbtFlags = NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED; 
-	var dnsq = createNBTQueryRequest(NBT_WILDCARD_NAME);
+	var dnsq = createNBTQueryRequest(NBT_MSBROWSE_NAME);
 	var buf = dnsq.serializeQuery();
 		
     if (g_nbtSearchSocket) {
