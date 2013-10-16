@@ -294,18 +294,46 @@ function nbtRecvLoop(socketId, deviceFoundCallback) {
             console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var dnsm = createDNSMessage(result.data);
 			var friendlyName = dnsm.friendlyName();
-			console.log('nbtrl:' + friendlyName); 
+//			console.log('nbtrl:' + friendlyName);
+            // TODO - No a NAME QUERY REQUEST, check the workstation name, check for data on port 80
             nbtRecvLoop(socketId, deviceFoundCallback);
         } else {
             console.log("  nbtrl: Error: " + result.resultCode);
         }
     });   
 }
-	
+
+function ipToNum(ip) {
+    var parts = ip.split('.');
+    if (parts.length == 4) return (parts[0] * 0x1000000) + (parts[1] * 0x10000) + (parts[2] * 0x100) + (parts[3]|0);
+    else return -1;
+}
+
+function numToIP(num) {
+    var part1 = num & 0xff;
+    var part2 = ((num >>> 8) & 0xff);
+    var part3 = ((num >>> 16) & 0xff);
+    var part4 = ((num >>> 24) & 0xff);
+
+    return part4 + "." + part3 + "." + part2 + "." + part1;
+}
+
+function getBroadcastIP(ip, prefixLen) {
+    var ipNum = ipToNum(ip);
+    if (ipNum != -1) {
+		var notMask = 0xffffffff;
+		if (prefixLen > 0) notMask = (1 << (32 - prefixLen)) - 1;
+        broadcast = ipNum | notMask;
+        return numToIP(broadcast);
+    } else {
+        return -1;
+    }
+}
+
 // Look for PCs
 function nbtSearch(deviceFoundCallback) {
     var nbtFlags = NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED; 
-	var dnsq = createNBTQueryRequest(NBT_MSBROWSE_NAME);
+	var dnsq = createNBTQueryRequest(NBT_WILDCARD_NAME);
 	var buf = dnsq.serializeQuery();
 		
     if (g_nbtSearchSocket) {
@@ -316,7 +344,7 @@ function nbtSearch(deviceFoundCallback) {
     chrome.socket.create("udp", function (socket) {
         g_nbtSearchSocket = socket;
         var socketId = socket.socketId;
-        chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
+        chrome.socket.bind(socketId, "0.0.0.0", 137, function (result) {
             // TODO - Fix, get errorcode -10 on broadcast address
           
 /*          
@@ -324,12 +352,22 @@ function nbtSearch(deviceFoundCallback) {
               console.log('network: ' + network.name + ', ' + network.address);
             });
 */          
-			chrome.socket.sendTo(socketId, buf, "192.168.0.255", 137, function (result) {
-                if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
-                else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
-				nbtRecvLoop(socketId, deviceFoundCallback);
-			});
-
+          // Broadcast on each network (IPv4 only)
+          chrome.socket.getNetworkList(function (adapters) {
+            for (var i = 0; i < adapters.length; i++) {
+                var ip = adapters[i].address;
+                var prefixLen = adapters[i].prefixLength;
+                var broadcastIP = getBroadcastIP(ip, prefixLen); 
+                if (broadcastIP.length > 0) {
+                  chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
+                      if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
+                      else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
+                      nbtRecvLoop(socketId, deviceFoundCallback);
+                  });
+                }
+            }
+          });
+                                         
 /*
 			var repeat = 3;			
 			var timer = setInterval(function() {
