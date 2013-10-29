@@ -175,15 +175,6 @@ function createDNSMessage(arrayBuffer) {
 	
 	return dnsm;
 }
-
-function uint16ToArray(array, offset, val) {
-	array[offset] = (val >> 8) & 0xff;
-	array[offset+1] = val & 0xff;
-}
-
-function arrayToUint16(array, offset) {
-	return (array[offset] << 8) + array[offset+1];
-}
 		
 // Serialize DNS query message in to an array buffer suitable for sending over the wire
 // NB Hardcoded to a single query record

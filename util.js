@@ -68,3 +68,12 @@ function fullyQualifyUrl(domain, url) {
         return uri.toString();
     }
 }
+
+function uint16ToArray(array, offset, val) {
+	array[offset] = (val >> 8) & 0xff;
+	array[offset+1] = val & 0xff;
+}
+
+function arrayToUint16(array, offset) {
+	return (array[offset] << 8) + array[offset+1];
+}
