@@ -35,7 +35,7 @@ function NBTQuestionRecord() {
 	
 function NBTNodeName() {
     this.name = '';
-    this.flags = 0;
+    this.type = 0;
 }	
 
 function NBTAnswerRecord() {
@@ -125,10 +125,11 @@ NBTStream.prototype.getNBTAnswerRecords = function (count) {
 		if (nbtar.type == NBT_QUESTION_TYPE_NBSTAT) {
             var nameCount = this.array[this.pos++] & 0xff;
             for (var j = 0; j < nameCount; j++) {
-    		    var nodeName  = '';
-    			for (var k = 0; k < 16; k++) {
-          			nodeName += String.fromCharCode(this.array[this.pos++]);
+        		var nodeName = new NBTNodeName();
+    			for (var k = 0; k < 15; k++) {
+          			nodeName.name += String.fromCharCode(this.array[this.pos++]);
         		}
+        		nodeName.type = this.array[this.pos++] & 0xff;
         		nbtar.nodeNames.push(nodeName);
         		// Ignore nodeName flags
         		this.pos += 2;
@@ -213,7 +214,7 @@ function nbtRecvLoop(socketId, deviceFoundCallback) {
 			var nbtm = createNBTResponseMessage(result.data);
 			if (nbtm.flags & 0x8000) {
 			    // Response msg
-			    console.log('..response: ' + nbtm.answerRecords[0].nodeNames[0])
+			    console.log('..response: ' + nbtm.answerRecords[0].nodeNames[0].name)
 			}
 //			var friendlyName = dnsm.friendlyName();
 //			console.log('nbtrl:' + friendlyName);
