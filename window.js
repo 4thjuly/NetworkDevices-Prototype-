@@ -36,6 +36,7 @@ function ListController($scope) {
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
         mdnsSearch(onDeviceFound);
+        nbtSearch(onDeviceFound);
     }
 
     function isDupDevice(device1, device2) { 
