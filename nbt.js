@@ -326,7 +326,7 @@ function nbtSearch(deviceFoundCallback) {
                     var ip = adapters[i].address;
                     var prefixLen = adapters[i].prefixLength;
                     var broadcastIP = getBroadcastIP(ip, prefixLen); 
-                    if (broadcastIP.length > 0) {
+                    if (broadcastIP != -1) {
                         chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
                             if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
                             else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
