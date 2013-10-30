@@ -26,192 +26,192 @@ var NBT_NAME_TYPE_DOMAIN_MASTER_BROWSER = 0x1B;
 var NBT_NODE_NAME_FLAGS_GROUP = 0x8000;
 var NBT_MESSAGE_FLAGS_RESPONSE = 0x8000;
 
-		
+        
 // ---------------------------------------------------------------------------
 function NBTMessage() {
     this.flags = 0;
-	this.questionRecords = [];
-	this.answerRecords = [];
+    this.questionRecords = [];
+    this.answerRecords = [];
 }
 
 function NBTQuestionRecord() {
-	this.name = '';
-	this.type = NBT_RESOURCE_RECORD_TYPE_PTR;
-	this.clss = NBT_RESOURCE_RECORD_CLASS_IN;
+    this.name = '';
+    this.type = NBT_RESOURCE_RECORD_TYPE_PTR;
+    this.clss = NBT_RESOURCE_RECORD_CLASS_IN;
 }
-	
+    
 function NBTNodeInfo() {
     this.name = '';
     this.type = 0;
     this.flags = 0;
-}	
+}    
 
 function NBTAnswerRecord() {
-	this.name = undefined;
-	this.type = 0;
-	this.class = 0;
-	this.data = undefined;
-	this.nodeInfos = [];
+    this.name = undefined;
+    this.type = 0;
+    this.class = 0;
+    this.data = undefined;
+    this.nodeInfos = [];
 }
 
 function NBTStream(array, initialOffset) {
-	this.array = array;
-	this.pos = initialOffset || 0;
+    this.array = array;
+    this.pos = initialOffset || 0;
 }
 
 // ---------------------------------------------------------------------------
 NBTStream.prototype.bytesToIPv4 = function () {
-	var arr = this.array;
-	var pos = this.pos;
-	var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
-	this.pos += 4;
-	return ip;
+    var arr = this.array;
+    var pos = this.pos;
+    var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
+    this.pos += 4;
+    return ip;
 };
 
 NBTStream.prototype.labelsToName = function (len) {
-  	return this.getLabels(len).join('.');
+      return this.getLabels(len).join('.');
 };
 
 // Parse out labels (byte counted strings with compression)
 NBTStream.prototype.getLabels = function (len) {
-	var array = this.array;
-	var offset = this.pos;
-	var labels = [];
-	var labelLen;
-	var dataEnd = len ? offset + len : array.length;
-	var label;
-	
- 	while (offset < dataEnd) {
-		labelLen = array[offset++];
-		if (!labelLen) {
-			break;
-		} else if (labelLen >= 0xc0) {
-			// Handle label compression, follow the ptr then stop
-			var ptr = ((labelLen & 0x3f) << 8) + array[offset++];
-			var tempNS = new NBTStream(array, ptr);
-			label = tempNS.labelsToName();
-    		labels.push(label);
-			break;
-		} else {
-    		label = '';
-			for (var i = 0; i < labelLen; i++) {
-      			label += String.fromCharCode(array[offset++]);
-    		}
-    		labels.push(label);
-		}
-  	}
-	this.pos = offset;
+    var array = this.array;
+    var offset = this.pos;
+    var labels = [];
+    var labelLen;
+    var dataEnd = len ? offset + len : array.length;
+    var label;
+    
+     while (offset < dataEnd) {
+        labelLen = array[offset++];
+        if (!labelLen) {
+            break;
+        } else if (labelLen >= 0xc0) {
+            // Handle label compression, follow the ptr then stop
+            var ptr = ((labelLen & 0x3f) << 8) + array[offset++];
+            var tempNS = new NBTStream(array, ptr);
+            label = tempNS.labelsToName();
+            labels.push(label);
+            break;
+        } else {
+            label = '';
+            for (var i = 0; i < labelLen; i++) {
+                  label += String.fromCharCode(array[offset++]);
+            }
+            labels.push(label);
+        }
+      }
+    this.pos = offset;
     // TODO - Decode NetBIOS name part (labels[0])
-  	return labels;
+      return labels;
 };
 
 NBTStream.prototype.getNBTQuestionRecords = function (count) {
-	var questionRecords = [];	
-	for (var i = 0; i < count; i++) {
-		var nbtqr = new NBTQuestionRecord();
-		var name = this.labelsToName();
-		nbtqr.name = name;
-		this.pos += 4; // skip the type and class
-		questionRecords.push(nbtqr);
-	}
-	return questionRecords;
+    var questionRecords = [];    
+    for (var i = 0; i < count; i++) {
+        var nbtqr = new NBTQuestionRecord();
+        var name = this.labelsToName();
+        nbtqr.name = name;
+        this.pos += 4; // skip the type and class
+        questionRecords.push(nbtqr);
+    }
+    return questionRecords;
 };
 
 NBTStream.prototype.getNBTAnswerRecords = function (count) {
-	var answerRecords = [];	
-	for (var i = 0; i < count; i++) {
-		var nbtar = new NBTAnswerRecord();
-		nbtar.name = this.labelsToName();
-		nbtar.type = arrayToUint16(this.array, this.pos);
-		// skip the type, class & ttl	
-		this.pos += 8;	
-		// get the data			
-		var dataLen = arrayToUint16(this.array, this.pos);
-		this.pos += 2;
-		var dataPos = this.pos; 
-		nbtar.data = this.array.subarray(this.pos, this.pos + dataLen);
-		if (nbtar.type == NBT_QUESTION_TYPE_NBSTAT) {
+    var answerRecords = [];    
+    for (var i = 0; i < count; i++) {
+        var nbtar = new NBTAnswerRecord();
+        nbtar.name = this.labelsToName();
+        nbtar.type = arrayToUint16(this.array, this.pos);
+        // skip the type, class & ttl    
+        this.pos += 8;    
+        // get the data            
+        var dataLen = arrayToUint16(this.array, this.pos);
+        this.pos += 2;
+        var dataPos = this.pos; 
+        nbtar.data = this.array.subarray(this.pos, this.pos + dataLen);
+        if (nbtar.type == NBT_QUESTION_TYPE_NBSTAT) {
             var nameCount = this.array[this.pos++] & 0xff;
             for (var j = 0; j < nameCount; j++) {
-        		var nodeInfo = new NBTNodeInfo();
-    			for (var k = 0; k < 15; k++) {
-          			nodeInfo.name += String.fromCharCode(this.array[this.pos++]);
-        		}
-        		nodeInfo.type = this.array[this.pos++] & 0xff;
-        		nodeInfo.flags = arrayToUint16(this.array, this.pos);
-        		this.pos += 2;
-        		nbtar.nodeInfos.push(nodeInfo);
+                var nodeInfo = new NBTNodeInfo();
+                for (var k = 0; k < 15; k++) {
+                      nodeInfo.name += String.fromCharCode(this.array[this.pos++]);
+                }
+                nodeInfo.type = this.array[this.pos++] & 0xff;
+                nodeInfo.flags = arrayToUint16(this.array, this.pos);
+                this.pos += 2;
+                nbtar.nodeInfos.push(nodeInfo);
             }
-		} else {
-			// Just skip the data for any other record types else
-			// TODO: IPv6
-			console.log('gnbtar: Skipped record type: ' + nbtar.type);
-		}
-		answerRecords.push(nbtar);
-		this.pos = dataPos + dataLen;
-	}
-	return answerRecords;
+        } else {
+            // Just skip the data for any other record types else
+            // TODO: IPv6
+            console.log('gnbtar: Skipped record type: ' + nbtar.type);
+        }
+        answerRecords.push(nbtar);
+        this.pos = dataPos + dataLen;
+    }
+    return answerRecords;
 };
-	
+    
 // Parse given arrayBuffer in to a NBT message
 function createNBTResponseMessage(arrayBuffer) {
     var nbtm = new NBTMessage();
-	if (arrayBuffer) {
-		var view = new Uint8Array(arrayBuffer);
-		var ns = new NBTStream(view);
-		nbtm.flags = arrayToUint16(view, NBT_HEADER_FLAGS_OFFSET);
-		var queCount = arrayToUint16(view, NBT_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET);
-		var ansCount = arrayToUint16(view, NBT_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET);
-		ns.pos = NBT_QUESTION_RESOURCE_OFFSET;
-		nbtm.questionRecords = ns.getNBTQuestionRecords(queCount);
-		nbtm.answerRecords = ns.getNBTAnswerRecords(ansCount);
-	}
-	
-	return nbtm;
+    if (arrayBuffer) {
+        var view = new Uint8Array(arrayBuffer);
+        var ns = new NBTStream(view);
+        nbtm.flags = arrayToUint16(view, NBT_HEADER_FLAGS_OFFSET);
+        var queCount = arrayToUint16(view, NBT_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET);
+        var ansCount = arrayToUint16(view, NBT_HEADER_ANSWER_RESOURCE_RECORD_COUNT_OFFSET);
+        ns.pos = NBT_QUESTION_RESOURCE_OFFSET;
+        nbtm.questionRecords = ns.getNBTQuestionRecords(queCount);
+        nbtm.answerRecords = ns.getNBTAnswerRecords(ansCount);
+    }
+    
+    return nbtm;
 }
-		
+        
 // Serialize NBT query message in to an array buffer suitable for sending over the wire
 // NB Hardcoded to a single query record
 NBTMessage.prototype.serializeQuery = function () {
-	var buf = new ArrayBuffer(512);
-	var view = new Uint8Array(buf);
-	var qr = this.questionRecords[0];
+    var buf = new ArrayBuffer(512);
+    var view = new Uint8Array(buf);
+    var qr = this.questionRecords[0];
     
     // Header stuff
-	uint16ToArray(view, NBT_HEADER_FLAGS_OFFSET, this.flags);
+    uint16ToArray(view, NBT_HEADER_FLAGS_OFFSET, this.flags);
     uint16ToArray(view, NBT_HEADER_QUESTION_RESOURCE_RECORD_COUNT_OFFSET, 1);
-				  
+                  
     // Question entry name, removing the dots
     var offset = NBT_QUESTION_RESOURCE_OFFSET;
     var labels = qr.name.split('.');
     labels.forEach(function (label) {
         view[offset++] = label.length;
         for (var i = 0; i < label.length; i++) {
-		  	view[offset++] = label.charCodeAt(i);
+              view[offset++] = label.charCodeAt(i);
         }
-	});
+    });
     
     // Remaining stuff
-	uint16ToArray(view, offset+1, qr.type);
-	uint16ToArray(view, offset+3, qr.clss);
-	
-	// trim
+    uint16ToArray(view, offset+1, qr.type);
+    uint16ToArray(view, offset+3, qr.clss);
+    
+    // trim
     buf = buf.slice(0, offset+5); 
                     
-	return buf;
+    return buf;
 };
 
 // ---------------------------------------------------------------------------
-var g_nbtSearchSocket;	
+var g_nbtSearchSocket;    
 
 function createNBTRequest(name, type, broadcast) {
-	var nbtm = new NBTMessage();
-	var nbtqr = new NBTQuestionRecord();
+    var nbtm = new NBTMessage();
+    var nbtqr = new NBTQuestionRecord();
     nbtm.flags = broadcast ? NBT_HEADER_REQUEST_QUERY_BROADCAST_RECURSION_ALLOWED : NBT_HEADER_REQUEST_QUERY_UNICAST_RECURSION_ALLOWED;
-	nbtqr.name = name;
+    nbtqr.name = name;
     nbtqr.type = type;
-	nbtm.questionRecords.push(nbtqr);
-	return nbtm;
+    nbtm.questionRecords.push(nbtqr);
+    return nbtm;
 }
 
 // De-pads an NBT name
@@ -226,7 +226,7 @@ function NBTNameToNormal(nbtName) {
 
 // Return first name that matches the given criteria
 function getNodeInfoNameByType(nodeInfos, type, group) {
-	for (var i = 0; i < nodeInfos.length; i++) {
+    for (var i = 0; i < nodeInfos.length; i++) {
         if (nodeInfos[i].type == type) {
             if (!group == !(nodeInfos[i].flags & NBT_NODE_NAME_FLAGS_GROUP)) {
                 return NBTNameToNormal(nodeInfos[i].name);
@@ -239,17 +239,17 @@ function nbtRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
             console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
-			var nbtm = createNBTResponseMessage(result.data);
-			if (nbtm.flags & NBT_MESSAGE_FLAGS_RESPONSE) {
-			    // Response msg
-			    console.log('..response.records: ' + nbtm.answerRecords.length);
-			    var name = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, false);
-			    var workgroup = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, true);
-			    console.log('..' + name + '(' + workgroup + ')')
-			    var device = new Device(result.address + ":" + result.port, result.address, null, 'SMB', workgroup, name, null);
-			    // TODO - Check it's a web server
-			    checkWebServer(device, deviceFoundCallback);
-			}
+            var nbtm = createNBTResponseMessage(result.data);
+            if (nbtm.flags & NBT_MESSAGE_FLAGS_RESPONSE) {
+                // Response msg
+                console.log('..response.records: ' + nbtm.answerRecords.length);
+                var name = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, false);
+                var workgroup = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, true);
+                console.log('..' + name + '(' + workgroup + ')')
+                var device = new Device(result.address + ":" + result.port, result.address, null, 'SMB', workgroup, name, null);
+                // TODO - Check it's a web server
+                checkWebServer(device, deviceFoundCallback);
+            }
             nbtRecvLoop(socketId, deviceFoundCallback);
         } else {
             console.log("  nbtrl: Error: " + result.resultCode);
@@ -296,8 +296,8 @@ function numToIP(num) {
 function getBroadcastIP(ip, prefixLen) {
     var ipNum = ipToNum(ip);
     if (ipNum != -1) {
-		var notMask = 0xffffffff;
-		if (prefixLen > 0) notMask = (1 << (32 - prefixLen)) - 1;
+        var notMask = 0xffffffff;
+        if (prefixLen > 0) notMask = (1 << (32 - prefixLen)) - 1;
         broadcast = ipNum | notMask;
         return numToIP(broadcast);
     } else {
@@ -307,9 +307,9 @@ function getBroadcastIP(ip, prefixLen) {
 
 // Look for PCs via NBT that have a web page
 function nbtSearch(deviceFoundCallback) {
-	var nbtr = createNBTRequest(NBT_WILDCARD_NAME, NBT_QUESTION_TYPE_NBSTAT, true);
-	var buf = nbtr.serializeQuery();
-		
+    var nbtr = createNBTRequest(NBT_WILDCARD_NAME, NBT_QUESTION_TYPE_NBSTAT, true);
+    var buf = nbtr.serializeQuery();
+        
     if (g_nbtSearchSocket) {
         chrome.socket.destroy(g_nbtSearchSocket.socketId);
         g_nbtSearchSocket = null;
@@ -329,23 +329,15 @@ function nbtSearch(deviceFoundCallback) {
                     if (broadcastIP != -1) {
                         chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
                             if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
-                            else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
+                            else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);      
+                            
+                            // Do it again in a bit
+                            setTimeout(function() {
+                                chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+                            }, 1000 + (Math.random() * 1000));
+                            
                             nbtRecvLoop(socketId, deviceFoundCallback);
                         });
-                        // Repeat just in case
-                        // for (var i = 0; i < 2; i++) {
-                        //     setTimeout(function() {
-                        //         chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
-                        //     }, 1000 + (Math.random() * 1000));
-                        // }
-            //             var repeat = 2;			
-            // 			var timer = setInterval(function() {
-            // 				console.log('nbtSearch('+repeat+'):...');
-            //                 if (broadcastIP != -1) {
-            //                     chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
-            //                 }
-            // 				if (--repeat <= 0) clearInterval(timer);
-            // 			}, 1000 + (Math.random() * 1000));
                     }
                 }
             });
