@@ -336,7 +336,9 @@ function nbtSearch(deviceFoundCallback) {
                         var repeat = 2;			
             			var timer = setInterval(function() {
             				console.log('nbtSearch('+repeat+'):...');
-                            chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+                            if (broadcastIP != -1) {
+                                chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+                            }
             				if (--repeat <= 0) clearInterval(timer);
             			}, 1000 + (Math.random() * 1000));
                     }
