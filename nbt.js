@@ -328,23 +328,22 @@ function nbtSearch(deviceFoundCallback) {
                     var broadcastIP = getBroadcastIP(ip, prefixLen); 
                     if (broadcastIP != -1) {
                         chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
-                            if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
-                            else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);      
-                            
-                            // Do it again in a bit
-                            setTimeout(function() {
-                                chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
-                            }, 1000 + (Math.random() * 1000));
-                            
-                            nbtRecvLoop(socketId, deviceFoundCallback);
+                            if (result.bytesWritten < 0) {
+                                console.log("nbtSearch error:" + result.bytesWritten);      
+                            } else {
+                                console.log("nbtSearch wrote:" + result.bytesWritten);
+                                
+                                // Do it again in a bit
+                                setTimeout(function() {
+                                    chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+                                }, 1000 + (Math.random() * 1000));
+                                
+                                nbtRecvLoop(socketId, deviceFoundCallback);
+                            }
                         });
                     }
                 }
             });
-                                         
-/*
-
-*/
         });
     });
 }
