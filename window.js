@@ -33,11 +33,9 @@ function ListController($scope) {
     // Specifically, seach for anything that has a 'friendly name', ideally a web page we can nav to
     // This, for example, will skip lots of misc mdns services
 	function searchForDevices(onDeviceFound) {
-/*
         ssdpSearch(onDeviceFound);
         wsdSearch(onDeviceFound);
         mdnsSearch(onDeviceFound);
-*/
         nbtSearch(onDeviceFound);
     }
 

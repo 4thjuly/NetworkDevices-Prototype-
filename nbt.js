@@ -19,6 +19,13 @@ var NBT_WILDCARD_NAME = 'CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 var NBT_MSBROWSE_NAME = 'ABACFPFPENFDECFCEPFHFDEFFPFPACAB';
 var NBT_QUESTION_TYPE_NB = 0x20;
 var NBT_QUESTION_TYPE_NBSTAT = 0x21;
+var NBT_NAME_TYPE_WORKSTATION_SERVICE = 0x00;
+var NBT_NAME_TYPE_MESSENGER_SERVICE = 0x03;
+var NBT_NAME_TYPE_FILE_SERVER_SERVICE = 0x20;
+var NBT_NAME_TYPE_DOMAIN_MASTER_BROWSER = 0x1B;
+var NBT_NODE_NAME_FLAGS_GROUP = 0x8000;
+var NBT_MESSAGE_FLAGS_RESPONSE = 0x8000;
+
 		
 // ---------------------------------------------------------------------------
 function NBTMessage() {
@@ -33,9 +40,10 @@ function NBTQuestionRecord() {
 	this.clss = NBT_RESOURCE_RECORD_CLASS_IN;
 }
 	
-function NBTNodeName() {
+function NBTNodeInfo() {
     this.name = '';
     this.type = 0;
+    this.flags = 0;
 }	
 
 function NBTAnswerRecord() {
@@ -43,7 +51,7 @@ function NBTAnswerRecord() {
 	this.type = 0;
 	this.class = 0;
 	this.data = undefined;
-	this.nodeNames = [];
+	this.nodeInfos = [];
 }
 
 function NBTStream(array, initialOffset) {
@@ -58,11 +66,11 @@ NBTStream.prototype.bytesToIPv4 = function () {
 	var ip = arr[pos] + '.' + arr[pos+1] + '.' + arr[pos+2] + '.' + arr[pos+3];
 	this.pos += 4;
 	return ip;
-}
+};
 
 NBTStream.prototype.labelsToName = function (len) {
   	return this.getLabels(len).join('.');
-}
+};
 
 // Parse out labels (byte counted strings with compression)
 NBTStream.prototype.getLabels = function (len) {
@@ -107,7 +115,7 @@ NBTStream.prototype.getNBTQuestionRecords = function (count) {
 		questionRecords.push(nbtqr);
 	}
 	return questionRecords;
-}
+};
 
 NBTStream.prototype.getNBTAnswerRecords = function (count) {
 	var answerRecords = [];	
@@ -125,14 +133,14 @@ NBTStream.prototype.getNBTAnswerRecords = function (count) {
 		if (nbtar.type == NBT_QUESTION_TYPE_NBSTAT) {
             var nameCount = this.array[this.pos++] & 0xff;
             for (var j = 0; j < nameCount; j++) {
-        		var nodeName = new NBTNodeName();
+        		var nodeInfo = new NBTNodeInfo();
     			for (var k = 0; k < 15; k++) {
-          			nodeName.name += String.fromCharCode(this.array[this.pos++]);
+          			nodeInfo.name += String.fromCharCode(this.array[this.pos++]);
         		}
-        		nodeName.type = this.array[this.pos++] & 0xff;
-        		nbtar.nodeNames.push(nodeName);
-        		// Ignore nodeName flags
+        		nodeInfo.type = this.array[this.pos++] & 0xff;
+        		nodeInfo.flags = arrayToUint16(this.array, this.pos);
         		this.pos += 2;
+        		nbtar.nodeInfos.push(nodeInfo);
             }
 		} else {
 			// Just skip the data for any other record types else
@@ -143,7 +151,7 @@ NBTStream.prototype.getNBTAnswerRecords = function (count) {
 		this.pos = dataPos + dataLen;
 	}
 	return answerRecords;
-}
+};
 	
 // Parse given arrayBuffer in to a NBT message
 function createNBTResponseMessage(arrayBuffer) {
@@ -161,7 +169,6 @@ function createNBTResponseMessage(arrayBuffer) {
 	
 	return nbtm;
 }
-
 		
 // Serialize NBT query message in to an array buffer suitable for sending over the wire
 // NB Hardcoded to a single query record
@@ -192,7 +199,7 @@ NBTMessage.prototype.serializeQuery = function () {
     buf = buf.slice(0, offset+5); 
                     
 	return buf;
-}
+};
 
 // ---------------------------------------------------------------------------
 var g_nbtSearchSocket;	
@@ -207,23 +214,68 @@ function createNBTRequest(name, type, broadcast) {
 	return nbtm;
 }
 
+// De-pads an NBT name
+function NBTNameToNormal(nbtName) {
+    var name = '';
+    for (var i = 0; i < nbtName.length; i++) {
+        if (nbtName[i] > ' ') name += nbtName[i];
+        else break;
+    }
+    return name;
+}
+
+// Return first name that matches the given criteria
+function getNodeInfoNameByType(nodeInfos, type, group) {
+	for (var i = 0; i < nodeInfos.length; i++) {
+        if (nodeInfos[i].type == type) {
+            if (!group == !(nodeInfos[i].flags & NBT_NODE_NAME_FLAGS_GROUP)) {
+                return NBTNameToNormal(nodeInfos[i].name);
+            }
+        }
+    }
+}
+
 function nbtRecvLoop(socketId, deviceFoundCallback) {
     chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
         if (result.resultCode >= 0) {
             console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
 			var nbtm = createNBTResponseMessage(result.data);
-			if (nbtm.flags & 0x8000) {
+			if (nbtm.flags & NBT_MESSAGE_FLAGS_RESPONSE) {
 			    // Response msg
-			    console.log('..response: ' + nbtm.answerRecords[0].nodeNames[0].name)
+			    console.log('..response.records: ' + nbtm.answerRecords.length);
+			    var name = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, false);
+			    var workgroup = getNodeInfoNameByType(nbtm.answerRecords[0].nodeInfos, NBT_NAME_TYPE_WORKSTATION_SERVICE, true);
+			    console.log('..' + name + '(' + workgroup + ')')
+			    var device = new Device(result.address + ":" + result.port, result.address, null, 'SMB', workgroup, name, null);
+			    // TODO - Check it's a web server
+			    checkWebServer(device, deviceFoundCallback);
 			}
-//			var friendlyName = dnsm.friendlyName();
-//			console.log('nbtrl:' + friendlyName);
-            // TODO - No a NAME QUERY REQUEST, check the workstation name, check for data on port 80
             nbtRecvLoop(socketId, deviceFoundCallback);
         } else {
             console.log("  nbtrl: Error: " + result.resultCode);
         }
     });   
+}
+
+function checkWebServer(device, deviceFoundCallback) {
+    var xhr = new XMLHttpRequest();
+    xhr.device = device;
+    xhr.callback = deviceFoundCallback;
+    xhr.open('GET', 'http://' + device.ip, true);
+    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    xhr.setRequestHeader('Pragma', 'no-cache');
+    xhr.onreadystatechange = onCheckWebServerReadyStateChange;
+    xhr.send();
+}
+
+function onCheckWebServerReadyStateChange() {
+    if (this.readyState == 4) {
+        if (this.status == 200) {
+            console.log('ocwsrsc: response');
+            this.device.presentationUrl = 'http://' + this.device.ip
+            this.callback(this.device);
+        }
+    }
 }
 
 function ipToNum(ip) {
@@ -253,7 +305,7 @@ function getBroadcastIP(ip, prefixLen) {
     }
 }
 
-// Look for PCs
+// Look for PCs via NBT that have a web page
 function nbtSearch(deviceFoundCallback) {
 	var nbtr = createNBTRequest(NBT_WILDCARD_NAME, NBT_QUESTION_TYPE_NBSTAT, true);
 	var buf = nbtr.serializeQuery();
@@ -268,36 +320,31 @@ function nbtSearch(deviceFoundCallback) {
         var socketId = socket.socketId;
         // NB Do Broadcasts need to come from port 137? Will this create port reuse issues?
         chrome.socket.bind(socketId, "0.0.0.0", 0, function (result) {
-            // TODO - Fix, get errorcode -10 on broadcast address
-          
-/*          
-            chrome.socket.getNetworkList( function (network) {
-              console.log('network: ' + network.name + ', ' + network.address);
-            });
-*/          
-          // Broadcast on each network (IPv4 only)
-          chrome.socket.getNetworkList(function (adapters) {
-            for (var i = 0; i < adapters.length; i++) {
-                var ip = adapters[i].address;
-                var prefixLen = adapters[i].prefixLength;
-                var broadcastIP = getBroadcastIP(ip, prefixLen); 
-                if (broadcastIP.length > 0) {
-                  chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
-                      if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
-                      else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
-                      nbtRecvLoop(socketId, deviceFoundCallback);
-                  });
+            // Broadcast on each network (IPv4 only)
+            chrome.socket.getNetworkList(function (adapters) {
+                for (var i = 0; i < adapters.length; i++) {
+                    var ip = adapters[i].address;
+                    var prefixLen = adapters[i].prefixLength;
+                    var broadcastIP = getBroadcastIP(ip, prefixLen); 
+                    if (broadcastIP.length > 0) {
+                        chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
+                            if (result.bytesWritten >= 0) console.log("nbtSearch wrote:" + result.bytesWritten);
+                            else if (result.bytesWritten < 0) console.log("nbtSearch error:" + result.bytesWritten);                
+                            nbtRecvLoop(socketId, deviceFoundCallback);
+                        });
+                        // Repeat just in case
+                        var repeat = 2;			
+            			var timer = setInterval(function() {
+            				console.log('nbtSearch('+repeat+'):...');
+                            chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+            				if (--repeat <= 0) clearInterval(timer);
+            			}, 1000 + (Math.random() * 1000));
+                    }
                 }
-            }
-          });
+            });
                                          
 /*
-			var repeat = 3;			
-			var timer = setInterval(function() {
-				console.log('mdnsSearch('+repeat+'):...');
-				chrome.socket.sendTo(socketId, buf, "224.0.0.251", 5353, function() { });
-				if (--repeat <= 0) clearInterval(timer);
-			}, 1000 + (Math.random() * 1000));
+
 */
         });
     });
