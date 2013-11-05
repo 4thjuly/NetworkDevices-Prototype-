@@ -1,4 +1,5 @@
 // Handle all NBT related network stuff
+// Separated out just to make it easier to share with other apps
 // TODO - De-dup with msdns stuff
 
 // ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ var NBT_NAME_TYPE_FILE_SERVER_SERVICE = 0x20;
 var NBT_NAME_TYPE_DOMAIN_MASTER_BROWSER = 0x1B;
 var NBT_NODE_NAME_FLAGS_GROUP = 0x8000;
 var NBT_MESSAGE_FLAGS_RESPONSE = 0x8000;
+var NBT_MAX_RESPONSE_PACKET_SIZE = 9000;
 
         
 // ---------------------------------------------------------------------------
@@ -327,15 +329,16 @@ function nbtBroadcast(buf, sendToCallback) {
                     var prefixLen = adapters[i].prefixLength;
                     var broadcastIP = getBroadcastIP(ip, prefixLen); 
                     if (broadcastIP != -1) {
-                        chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {
+                        var cBroadcastIP = broadcastIP;
+                        chrome.socket.sendTo(socketId, buf, cBroadcastIP, 137, function (result) {
                             if (result.bytesWritten < 0) {
                                 console.log("nbtSearch error:" + result.bytesWritten);      
                             } else {
                                 console.log("nbtSearch wrote:" + result.bytesWritten);
                                 
-                                // Do it again in a bit
+                                // Do it again in a bit since udp is unreliable
                                 setTimeout(function() {
-                                    chrome.socket.sendTo(socketId, buf, broadcastIP, 137, function (result) {});
+                                    chrome.socket.sendTo(socketId, buf, cBroadcastIP, 137, function (result) {});
                                 }, 1000 + (Math.random() * 1000));
                                 
                                 //nbtWildcardSearchRecvLoop(socketId, deviceFoundCallback);
@@ -349,26 +352,32 @@ function nbtBroadcast(buf, sendToCallback) {
     });
 }
 
-// // Return the IP for the requested name 
-// function nbtNameSearch(name) {
-//     // TODO - search for the given name
-//     var nbtr = createNBTRequest(nameToNBTName(name), NBT_QUESTION_TYPE_NB, true);
-//     var buf = nbtr.serializeQuery();
+// Return the IP for the requested name via the callback
+// NB Nbt names are often case sensitive. Windows generally uppercases things
+function nbtNameSearchForIP(name, callback) {
+    var lastIP;
+    var nbtr = createNBTRequest(nameToNBTName(name), NBT_QUESTION_TYPE_NB, true);
+    var buf = nbtr.serializeQuery();
     
-//     function recvLoop(socketId) {
-//         chrome.socket.recvFrom(socketId, MDNS_MAX_PACKET_SIZE, function (result) {
-//             if (result.resultCode >= 0) {
-//                 console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
-//                 var nbtm = createNBTResponseMessage(result.data);
-//                 if (nbtm.flags & NBT_MESSAGE_FLAGS_RESPONSE) {
-//                     console.log('..response.records: ' + nbtm.answerRecords.length);
-//                 }
-//                 recvLoop(socketId);
-//             } else {
-//                 console.log("  nbtrl: Error: " + result.resultCode);
-//             }
-//         });   
-//     }
+    // NB This can be called more than once for each broadcast
+    function recvLoop(socketId) {
+        chrome.socket.recvFrom(socketId, NBT_MAX_RESPONSE_PACKET_SIZE, function (result) {
+            if (result.resultCode >= 0) {
+                console.log("...nbtrl.recvFrom("+socketId+"): " + result.address + ":" + result.port);            
+                var nbtm = createNBTResponseMessage(result.data);
+                if (nbtm.flags & NBT_MESSAGE_FLAGS_RESPONSE) {
+                    console.log('..response.records: ' + nbtm.answerRecords.length);
+                    if (lastIP != result.address) {
+                        lastIP = result.address;
+                        callback(result.address);
+                    }
+                }
+                recvLoop(socketId);
+            } else {
+                console.log("  nbtrl: Error: " + result.resultCode);
+            }
+        });   
+    }
     
-//     nbtBroadcast(buf, recvLoop);   
-// }
+    nbtBroadcast(buf, recvLoop);   
+}
